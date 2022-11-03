@@ -1,0 +1,23 @@
+#!/usr/bin/env checkbox-cli-wrapper
+[launcher]
+app_id = com.canonical.qa.shiner:checkbox
+launcher_version = 1
+stock_reports = text, submission_files, certification
+
+[test plan]
+unit = com.canonical.qa.shiner::imx8gnp2wire-automated
+filter = com.canonical.qa.shiner::imx8gnp2wire
+        com.canonical.qa.shiner::imx8gnp2wire-manual
+        com.canonical.qa.shiner::imx8gnp2wire-automated
+        com.canonical.qa.shiner::imx8gnp2wire-stress
+forced = yes
+
+[test selection]
+forced = yes
+
+[ui]
+type = silent
+
+[environment]
+STORE_ID=ooceeLes5Eit8Ja0caeN
+TOTAL_MTD_NUM=1
