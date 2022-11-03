@@ -7,116 +7,37 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-def send_success_mail():
-    # instance of MIMEMultipart
-    msg = MIMEMultipart()
-    
-    # storing the senders email address
-    msg['From'] = fromaddr
-    
-    # storing the receivers email address
-    msg['To'] = ", ".join(recipients)
-    
-    # storing the subject
-    msg['Subject'] = "Subject of the Mail"
-    
-    # string to store the body of the mail
-    body = "Body_of_the_mail"
-    
-    # attach the body with the msg instance
-    msg.attach(MIMEText(body, 'plain'))
-    
-    # open the file to be sent
-    filename = "File_name_with_extension"
-    attachment = open("Path of the file", "rb")
-    
-    # instance of MIMEBase and named as p
-    p = MIMEBase('application', 'octet-stream')
-    
-    # To change the payload into encoded form
-    p.set_payload((attachment).read())
-    
-    # encode into base64
-    encoders.encode_base64(p)
-    
-    p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-    
-    # attach the instance 'p' to instance 'msg'
-    msg.attach(p)
-    
-    # creates SMTP session
-    s = smtplib.SMTP('smtp.gmail.com', 465)
-    
-    # start TLS for security
-    s.starttls()
-    
-    # Authentication
-    s.login(fromaddr, "Password_of_the_sender")
-    
-    # Converts the Multipart msg into a string
-    text = msg.as_string()
-    
-    # sending the mail
-    s.sendmail(fromaddr, recipients, text)
-    
-    # terminating the session
-    s.quit()
-    
-def send_failed_mail():
+MESSG = ["success", "failed"]
+SUCCESS = 0
+FAILED = 1
+PASSWD = "ectgbttmpfsbxxrg"
+fromaddr = "an.wu@canonical.com"
+recipients = ["an.wu@canonical.com"]
 
-    # instance of MIMEMultipart
+
+def send_failed_mail(status, message):
+
     msg = MIMEMultipart()
-    
-    # storing the senders email address
     msg['From'] = fromaddr
-    
-    # storing the receivers email address
     msg['To'] = ", ".join(recipients)
-    
-    # storing the subject
-    msg['Subject'] = "Auto Sanity failed!!"
-    
-    # string to store the body of the mail
-    body = "This is auto sanity bot notification"
-    
-    # attach the body with the msg instance
+    msg['Subject'] = "Auto Sanity " + MESSG[status] + "!!"
+    body = "This is auto sanity bot notification\n" + message
     msg.attach(MIMEText(body, 'plain'))
    
-    '''
-    filename = "File_name_with_extension"
-    attachment = open("Path of the file", "rb")
-    
-    # instance of MIMEBase and named as p
-    p = MIMEBase('application', 'octet-stream')
-    
-    # To change the payload into encoded form
-    p.set_payload((attachment).read())
-    
-    # encode into base64
-    encoders.encode_base64(p)
-    
-    p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-    
-    # attach the instance 'p' to instance 'msg'
-    msg.attach(p)
-    '''
-    # creates SMTP session
+    if status == SUCCESS:
+        filename = "File_name_with_extension"
+        attachment = open("Path of the file", "rb")
+        p = MIMEBase('application', 'octet-stream')
+        p.set_payload((attachment).read())
+        encoders.encode_base64(p)
+        p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+        msg.attach(p)
+
     s = smtplib.SMTP('smtp.gmail.com', 587)
-    
-    # start TLS for security
     s.starttls()
-    
-    # Authentication
-    print(fromaddr)
-    s.login(fromaddr, "ectgbttmpfsbxxrg")
-    
-    # Converts the Multipart msg into a string
+    s.login(fromaddr, PASSWD)
     text = msg.as_string()
-    
-    # sending the mail
     s.sendmail(fromaddr, recipients, text)
-    
-    # terminating the session
     s.quit()
 
 def flash():
@@ -205,16 +126,14 @@ def checkbox():
 
 if __name__ == "__main__":
 
-    fromaddr = "an.wu@canonical.com" 
-    recipients = ['an.wu@canonical.com', 'soar.huang@canonical.com']
     try:
         con = serial.Serial(port="/dev/ttyUSB0", baudrate=115200, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
     except serial.SerialException as e:
         print("could not open serial port '{}': {}".format(com_port, e))
 
     
-    flash()
-    run_mode_login()
-    checkbox()
-    #send_failed_mail()
+    #flash()
+    #run_mode_login()
+    #checkbox()
+    send_failed_mail(FAILED, 'for test')
 
