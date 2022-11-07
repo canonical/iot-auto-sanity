@@ -2,6 +2,7 @@ import serial
 import time
 import os
 import smtplib
+import socket
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -14,6 +15,11 @@ PASSWD = "ectgbttmpfsbxxrg"
 fromaddr = "an.wu@canonical.com"
 recipients = ["an.wu@canonical.com"]
 
+hostname = ''
+ipaddr = ''
+
+report = ''
+cur_dir = ''
 
 def send_failed_mail(status, message):
 
@@ -117,10 +123,33 @@ def checkbox():
     while True:
         mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
         print(mesg)
+        if mesg.find('submission') != -1 and mesg.find('.tar.xz') != -1:
+            report = mesg.replace('file://', '')
 
-        if mesg.find('Finished Plainbox Resume Wrapper') != -1:
-            print('auto sanity is finished')
-            break
+            while True:
+                mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+                print(mesg)
+                if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
+                    while True:
+                        con.write(b'\r\n')
+                        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+                        print(mesg)
+
+                        if mesg.find('ubuntu login:') != -1:
+                            con.write(b'iotuc\r\n')
+                        elif mesg.find('Password:') != -1:
+                            con.write(b'iotuc\r\n')
+                            break
+
+                    while True:
+                        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+                        print(mesg)
+                        dl = 'sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '\r\n'
+                        print(dl)
+                        con.write(bytes(dl, 'utf-8'))
+                        print('auto sanity is finished')
+                        return
+
 
 
 
@@ -131,9 +160,12 @@ if __name__ == "__main__":
     except serial.SerialException as e:
         print("could not open serial port '{}': {}".format(com_port, e))
 
+    hostname = socket.gethostname()
+    ipaddr = socket.gethostbyname(hostname)
+    cur_dir = os.getcwd()
     
-    #flash()
-    #run_mode_login()
-    #checkbox()
+    flash()
+    run_mode_login()
+    checkbox()
     send_failed_mail(FAILED, 'for test')
 
