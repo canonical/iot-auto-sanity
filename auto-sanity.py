@@ -12,8 +12,10 @@ MESSG = ["success", "failed"]
 SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
+SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["an.wu@canonical.com"]
+
 
 hostname = ''
 ipaddr = ''
@@ -144,7 +146,8 @@ def checkbox():
                     while True:
                         mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
                         print(mesg)
-                        dl = 'sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '\r\n'
+
+                        dl = 'ssh -f ' + SSHPWD + ' sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '/report\r\n'
                         print(dl)
                         con.write(bytes(dl, 'utf-8'))
                         print('auto sanity is finished')
