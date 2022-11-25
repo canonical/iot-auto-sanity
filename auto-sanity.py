@@ -23,18 +23,24 @@ ipaddr = ''
 report = ''
 cur_dir = ''
 
-def login():
-    while True:
-        con.write(b'\r\n')
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
-        if mesg.find('ubuntu login:') != -1:
-            con.write(b'iotuc\r\n')
-            mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-            if mesg.find('Password:') != -1:
-                con.write(b'iotuc\r\n')
-                return
+def write_con(message="", wait=0):
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(wait)
 
+def read_con():
+    mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+    print(mesg)
+    return mesg
+
+def login():
+
+    while True:
+        write_con()
+        mesg = read_con()
+        if mesg.find("ubuntu login:") != -1:
+            write_con("iotuc", 0.5)
+            write_con("iotuc", 0.5)
+            return
 
 def send_failed_mail(status, message):
 
@@ -68,6 +74,7 @@ def flash():
 
         if mesg.find('Ubuntu Core 20 on') != -1:
             login()
+            break
 
     con.write(b'sudo reboot\r\n')
 
@@ -104,6 +111,7 @@ def run_mode_login():
 
                 if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
                     login()
+                    return
 
 
 def checkbox():
@@ -141,15 +149,19 @@ def checkbox():
 
 if __name__ == "__main__":
 
-    try:
-        con = serial.Serial(port="/dev/ttyUSB0", baudrate=115200, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
-    except serial.SerialException as e:
-        print("could not open serial port '{}': {}".format(com_port, e))
+    com_port = "/dev/ttyUSB0"
+    brate = 115200
+    while True:
+        try:
+            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
+            break;
+        except serial.SerialException as e:
+            print("{} retrying.....".format(e))
+            time.sleep(1)
 
     hostname = socket.gethostname()
     ipaddr = socket.gethostbyname(hostname)
     cur_dir = os.getcwd()
-    
     flash()
     run_mode_login()
     checkbox()
