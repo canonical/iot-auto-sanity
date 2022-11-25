@@ -41,10 +41,10 @@ def send_mail(status='failed', message='None', filename=''):
     msg['Subject'] = "Auto Sanity " + MESSG[status] + "!!"
     body = "This is auto sanity bot notification\n" + message
     msg.attach(MIMEText(body, 'plain'))
-   
+
     if status == SUCCESS:
         filename = filename
-        attachment = open(filename, "rb")
+        attachment = open(cur_dir + '/' + filename, "rb")
         p = MIMEBase('application', 'octet-stream')
         p.set_payload((attachment).read())
         encoders.encode_base64(p)
