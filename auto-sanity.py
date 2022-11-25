@@ -23,6 +23,8 @@ ipaddr = ''
 report = ''
 cur_dir = ''
 
+testrunner = 'test-runner-imx8fire'
+
 def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
     time.sleep(wait)
@@ -110,10 +112,10 @@ def init_mode_login():
 def checkbox():
     write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
     write_con('sudo snap set checkbox-shiner slave=disabled')
-    write_con('cat << EOF > ' + testplan )
-    write_con(open( testplan ,"rb").read())
+    write_con('cat << EOF > ' + testrunner )
+    con_write(open( testrunner ,"rb").read())
     write_con('EOF')
-    write_con('sudo checkbox-shiner.checkbox-cli' + testplan )
+    write_con('sudo checkbox-shiner.checkbox-cli' + testrunner )
 
     while True:
         read_con()
