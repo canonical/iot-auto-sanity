@@ -23,6 +23,19 @@ ipaddr = ''
 report = ''
 cur_dir = ''
 
+def login():
+    while True:
+        con.write(b'\r\n')
+        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+        print(mesg)
+        if mesg.find('ubuntu login:') != -1:
+            con.write(b'iotuc\r\n')
+            mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+            if mesg.find('Password:') != -1:
+                con.write(b'iotuc\r\n')
+                return
+
+
 def send_failed_mail(status, message):
 
     msg = MIMEMultipart()
@@ -54,19 +67,7 @@ def flash():
         print(mesg)
 
         if mesg.find('Ubuntu Core 20 on') != -1:
-            con.write(b'\r\n')
-
-            while True:
-                mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                print(mesg)
-                if mesg.find('ubuntu login:') != -1:
-                    con.write(b'iotuc\r\n')
-                elif mesg.find('Password:') != -1:
-                    con.write(b'iotuc\r\n')
-                    break
-                time.sleep(1)
-
-            break
+            login()
 
     con.write(b'sudo reboot\r\n')
 
@@ -102,16 +103,7 @@ def run_mode_login():
                 print(mesg)
 
                 if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    con.write(b'\r\n')
-                    while True:
-                        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                        print(mesg)
-                        if mesg.find('ubuntu login:') != -1:
-                            con.write(b'iotuc\r\n')
-                        elif mesg.find('Password:') != -1:
-                            con.write(b'iotuc\r\n')
-                            return
-                        time.sleep(1)
+                    login()
 
 
 def checkbox():
@@ -132,16 +124,7 @@ def checkbox():
                 mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
                 print(mesg)
                 if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
-                    while True:
-                        con.write(b'\r\n')
-                        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                        print(mesg)
-
-                        if mesg.find('ubuntu login:') != -1:
-                            con.write(b'iotuc\r\n')
-                        elif mesg.find('Password:') != -1:
-                            con.write(b'iotuc\r\n')
-                            break
+                    login()
 
                     while True:
                         mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
