@@ -86,18 +86,16 @@ def flash():
             write_con('run bootcmd')
             break
 
-    while True:
-        mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            break
-
 
 def run_mode_login():
     while True:
         mesg = read_con()
-        if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-            login()
-            return
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
+                    login()
+                    return
 
 
 def checkbox():
