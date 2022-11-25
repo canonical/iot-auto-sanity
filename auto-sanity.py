@@ -32,15 +32,6 @@ def read_con():
     print(mesg)
     return mesg
 
-def login():
-
-    while True:
-        write_con()
-        mesg = read_con()
-        if mesg.find("ubuntu login:") != -1:
-            write_con("iotuc", 0.5)
-            write_con("iotuc", 0.5)
-            return
 
 def send_failed_mail(status, message):
 
@@ -67,80 +58,69 @@ def send_failed_mail(status, message):
     s.sendmail(fromaddr, recipients, text)
     s.quit()
 
+def login():
+    while True:
+        write_con()
+        mesg = read_con()
+        if mesg.find("ubuntu login:") != -1:
+            write_con("iotuc", 0.5)
+            write_con("iotuc", 0.5)
+            return
+
 def flash():
     while True:
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
-
+        mesg = read_con()
         if mesg.find('Ubuntu Core 20 on') != -1:
             login()
             break
 
-    con.write(b'sudo reboot\r\n')
+    write_con("sudo reboot")
 
     while True:
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
-
+        mesg = read_con()
         if mesg.find('Fastboot:') != -1:
-            con.write(b'\r\n')
-            con.write(b'fastboot usb 0\r\n')
+            write_con("\r\n")
+            write_con("fastboot usb 0")
             os.system('sudo uuu uc.lst')
-            con.write(b'\x03')
-            con.write(b'run bootcmd\r\n')
+            write_con('\x03')
+            write_con('run bootcmd')
             break
 
     while True:
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
+        mesg = read_con()
         if mesg.find('snapd_recovery_mode=run') != -1:
             break
 
 
 def run_mode_login():
     while True:
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
-
-        if mesg.find('Ubuntu Core 20 on') != -1:
-            con.write(b'\r\n')
-
-            while True:
-                mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                print(mesg)
-
-                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    login()
-                    return
+        mesg = read_con()
+        if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
+            login()
+            return
 
 
 def checkbox():
-    con.write(b'ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode\r\n')
-    con.write(b'sudo snap set checkbox-shiner slave=disabled\r\n')
-    con.write(b'cat << EOF > test-runner-imx8gnp2wire\r\n')
-    con.write(open("test-runner-imx8gnp2wire","rb").read())
-    con.write(b'EOF\r\n')
-    con.write(b'sudo checkbox-shiner.checkbox-cli test-runner-imx8gnp2wire\r\n')
+    write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
+    write_con('sudo snap set checkbox-shiner slave=disabled')
+    write_con('cat << EOF > ' + testplan )
+    write_con(open( testplan ,"rb").read())
+    write_con('EOF')
+    write_con('sudo checkbox-shiner.checkbox-cli' + testplan )
 
     while True:
-        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        print(mesg)
+        read_con()
         if mesg.find('submission') != -1 and mesg.find('.tar.xz') != -1:
             report = mesg.replace('file://', '')
 
             while True:
-                mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                print(mesg)
+                read_con()
                 if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
                     login()
 
                     while True:
-                        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-                        print(mesg)
-
-                        dl = 'ssh -f ' + SSHPWD + ' sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '/report\r\n'
-                        print(dl)
-                        con.write(bytes(dl, 'utf-8'))
+                        read_con()
+                        write_con('ssh -f ' + SSHPWD + ' sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '/report\r\n')
                         print('auto sanity is finished')
                         return
 
@@ -162,8 +142,24 @@ if __name__ == "__main__":
     hostname = socket.gethostname()
     ipaddr = socket.gethostbyname(hostname)
     cur_dir = os.getcwd()
-    flash()
-    run_mode_login()
-    checkbox()
-    send_failed_mail(FAILED, 'for test')
+
+    with open('testscript') as file:
+        for line in file:
+            print(line)
+            match line.strip():
+                case "FLASH":
+                    flash()
+                case "LOGIN":
+                    run_mode_login()
+                case "CHECKBOX":
+                    checkbox()
+                case "MAIL":
+                    send_failed_mail(FAILED, 'for test')
+                case "EOFS:":
+                    while cmd in file:
+                        if cmd.find("EOFEND:") != -1:
+                            break
+                        write_con(cmd, 0.5)
+                case _:
+                    print("not support command")
 
