@@ -87,7 +87,7 @@ def flash():
             break
 
 
-def run_mode_login():
+def init_mode_login():
     while True:
         mesg = read_con()
         if mesg.find('snapd_recovery_mode=run') != -1:
@@ -147,8 +147,10 @@ if __name__ == "__main__":
             match line.strip():
                 case "FLASH":
                     flash()
+                case "INIT_LOGIN":
+                    init_mode_login()
                 case "LOGIN":
-                    run_mode_login()
+                    login()
                 case "CHECKBOX":
                     checkbox()
                 case "MAIL":
