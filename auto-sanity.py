@@ -33,7 +33,7 @@ def read_con():
     return mesg
 
 
-def send_failed_mail(status, message):
+def send_mail(status='failed', message='None', filename=''):
 
     msg = MIMEMultipart()
     msg['From'] = fromaddr
@@ -43,12 +43,12 @@ def send_failed_mail(status, message):
     msg.attach(MIMEText(body, 'plain'))
    
     if status == SUCCESS:
-        filename = "File_name_with_extension"
-        attachment = open("Path of the file", "rb")
+        filename = filename
+        attachment = open(filename, "rb")
         p = MIMEBase('application', 'octet-stream')
         p.set_payload((attachment).read())
         encoders.encode_base64(p)
-        p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+        p.add_header('Content-Disposition', "attachment; filename= %s" % filename )
         msg.attach(p)
 
     s = smtplib.SMTP('smtp.gmail.com', 587)
@@ -86,6 +86,15 @@ def flash():
             write_con('run bootcmd')
             break
 
+def normal_login():
+    while True:
+        mesg = read_con()
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Ubuntu Core 20 on') != -1:
+                    login()
+                    return
 
 def init_mode_login():
     while True:
@@ -150,11 +159,9 @@ if __name__ == "__main__":
                 case "INIT_LOGIN":
                     init_mode_login()
                 case "LOGIN":
-                    login()
+                    normal_login()
                 case "CHECKBOX":
                     checkbox()
-                case "MAIL":
-                    send_failed_mail(FAILED, 'for test')
                 case "EOFS:":
                     while cmd in file:
                         if cmd.find("EOFEND:") != -1:
