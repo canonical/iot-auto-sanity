@@ -1,6 +1,7 @@
 import serial
 import time
 import os
+import sys
 import smtplib
 import socket
 from email.mime.multipart import MIMEMultipart
@@ -16,14 +17,11 @@ SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["an.wu@canonical.com"]
 
-
 hostname = ''
 ipaddr = ''
 
 report = ''
 cur_dir = ''
-
-testrunner = 'test-runner-imx8fire'
 
 def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
@@ -109,13 +107,13 @@ def init_mode_login():
                     return
 
 
-def checkbox():
+def checkbox(runner_cfg):
     write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
     write_con('sudo snap set checkbox-shiner slave=disabled')
-    write_con('cat << EOF > ' + testrunner )
-    con_write(open( testrunner ,"rb").read())
+    write_con('cat << EOF > ' + runner_cfg )
+    con_write(open( runner_cfg ,"rb").read())
     write_con('EOF')
-    write_con('sudo checkbox-shiner.checkbox-cli' + testrunner )
+    write_con('sudo checkbox-shiner.checkbox-cli' + runner_cfg )
 
     while True:
         read_con()
@@ -168,7 +166,11 @@ if __name__ == "__main__":
                     normal_login()
                 case "CHECKBOX":
                     print("====run checkbox====")
-                    checkbox()
+                    if len(act) > 1:
+                        checkbox(act[1])
+                    else:
+                        print("please assign testrunner config file")
+                        sys.exit()
                 case "EOFS:":
                     print("====custom command start====")
                     while cmd in file:
@@ -192,6 +194,7 @@ if __name__ == "__main__":
                             time.sleep(604800)
                         case _:
                             print("unknowen setting" + act[1])
+                            sys.exit()
 
                 case _:
                     print("not support command " + act[0])
