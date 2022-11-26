@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     com_port = "/dev/ttyUSB0"
     brate = 115200
-    
+
     while True:
         try:
             con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         except serial.SerialException as e:
             print("{} retrying.....".format(e))
             time.sleep(1)
-    
+
     hostname = socket.gethostname()
     ipaddr = socket.gethostbyname(hostname)
     cur_dir = os.getcwd()
@@ -177,6 +177,22 @@ if __name__ == "__main__":
                             break
                         print("set command " + cmd)
                         write_con(cmd, 0.5)
+                case "PERIODIC":
+                    file.seek(0, 0)
+                    match act[1]:
+                        case "test":
+                            time.sleep(10)
+                        case "hour":
+                            time.sleep(3600)
+                        case "12hour":
+                            time.sleep(43200)
+                        case "day":
+                            time.sleep(86400)
+                        case "week":
+                            time.sleep(604800)
+                        case _:
+                            print("unknowen setting" + act[1])
+
                 case _:
                     print("not support command " + act[0])
 
