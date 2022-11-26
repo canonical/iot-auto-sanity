@@ -140,6 +140,7 @@ if __name__ == "__main__":
 
     com_port = "/dev/ttyUSB0"
     brate = 115200
+    
     while True:
         try:
             con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
@@ -147,28 +148,35 @@ if __name__ == "__main__":
         except serial.SerialException as e:
             print("{} retrying.....".format(e))
             time.sleep(1)
-
+    
     hostname = socket.gethostname()
     ipaddr = socket.gethostbyname(hostname)
     cur_dir = os.getcwd()
 
     with open('testscript') as file:
         for line in file:
-            print(line)
-            match line.strip():
+            act = line.split()
+            match act[0]:
                 case "FLASH":
+                    print("====flash procedure====")
                     flash()
                 case "INIT_LOGIN":
+                    print("====init login====")
                     init_mode_login()
                 case "LOGIN":
+                    print("====normal login====")
                     normal_login()
                 case "CHECKBOX":
+                    print("====run checkbox====")
                     checkbox()
                 case "EOFS:":
+                    print("====custom command start====")
                     while cmd in file:
                         if cmd.find("EOFEND:") != -1:
+                            print("====custom command end====")
                             break
+                        print("set command " + cmd)
                         write_con(cmd, 0.5)
                 case _:
-                    print("not support command")
+                    print("not support command " + act[0])
 
