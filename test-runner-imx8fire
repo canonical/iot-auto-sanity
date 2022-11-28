@@ -20,7 +20,16 @@ type = silent
 
 [transport:local_file]
 type = file
-path = ~/submission.tar.xz
+path = /home/iotuc/report.tar.xz
+
+
+[exporter:example_tar]
+unit = com.canonical.plainbox::tar
+
+[report:file]
+transport = local_file
+exporter = tar
+forced = yes
 
 [environment]
 STORE_ID=pheijeashiegheiL5aeb
