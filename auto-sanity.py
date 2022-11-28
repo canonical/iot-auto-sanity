@@ -111,22 +111,22 @@ def checkbox(runner_cfg):
     write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
     write_con('sudo snap set checkbox-shiner slave=disabled')
     write_con('cat << EOF > ' + runner_cfg )
-    con_write(open( runner_cfg ,"rb").read())
+    con.write(open( runner_cfg ,"rb").read())
     write_con('EOF')
-    write_con('sudo checkbox-shiner.checkbox-cli' + runner_cfg )
+    write_con('sudo checkbox-shiner.checkbox-cli ' + runner_cfg )
 
     while True:
-        read_con()
+        mesg = read_con()
         if mesg.find('submission') != -1 and mesg.find('.tar.xz') != -1:
             report = mesg.replace('file://', '')
 
             while True:
-                read_con()
+                mesg = read_con()
                 if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
                     login()
 
                     while True:
-                        read_con()
+                        mesg = read_con()
                         write_con('ssh -f ' + SSHPWD + ' sudo scp ' + report + ' an@' + ipaddr + ':~/' + cur_dir + '/report\r\n')
                         print('auto sanity is finished')
                         return
