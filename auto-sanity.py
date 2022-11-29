@@ -124,8 +124,13 @@ def checkbox(runner_cfg):
                 mesg = read_con()
                 if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
                     while True:
-                        os.system('sshpass -p iotuc scp iotuc@10.102.89.156:submission.tar.xz .')
-                        send_mail(SUCCESS, 'auto sanity is finished', 'submission.tar.xz')
+                        login()
+                        write_con('sudo ip link set en2 up')
+                        write_con('sudo ip addr add 10.102.89.207/23 dev en2')
+                        time.sleep(3)
+                        cmd = 'sudo -u '+ os.getlogin( ) + ' sshpass -p iotuc scp iotuc@10.102.89.207:report.tar.xz .'
+                        os.system(cmd)
+                        send_mail(SUCCESS, 'auto sanity is finished', 'report.tar.xz')
                         print('auto sanity is finished')
                         return
 
