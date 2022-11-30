@@ -14,3 +14,4 @@ SYSEND:
 FLASH
 INIT_LOGIN
 CHECKBOX test-runner-imx8fire
+PERIODIC day
