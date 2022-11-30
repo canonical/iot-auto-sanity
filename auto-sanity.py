@@ -22,6 +22,9 @@ ipaddr = ''
 
 report = ''
 cur_dir = ''
+def syscmd(message="", wait=0):
+    os.system(message)
+    time.sleep(wait)
 
 def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
@@ -175,12 +178,21 @@ if __name__ == "__main__":
                         sys.exit()
                 case "EOFS:":
                     print("====custom command start====")
-                    while cmd in file:
+                    for cmd in file:
                         if cmd.find("EOFEND:") != -1:
                             print("====custom command end====")
                             break
                         print("set command " + cmd)
                         write_con(cmd, 0.5)
+                case "SYSS:":
+                    print("sys comand")
+                    for cmd in file:
+                        if cmd.find("SYSEND:") != -1:
+                            print("====sys command end====")
+                            break
+                        print("set command " + cmd)
+                        syscmd(cmd, 0.5)
+
                 case "PERIODIC":
                     file.seek(0, 0)
                     match act[1]:
