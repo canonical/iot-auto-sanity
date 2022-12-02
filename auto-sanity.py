@@ -154,9 +154,12 @@ if __name__ == "__main__":
     ipaddr = socket.gethostbyname(hostname)
     cur_dir = os.getcwd()
 
-    with open('testscript') as file:
+    with open('tplan') as file:
         for line in file:
             act = line.split()
+            if len(act) == 0:
+                continue
+
             match act[0]:
                 case "FLASH":
                     print("====flash procedure====")
@@ -180,16 +183,22 @@ if __name__ == "__main__":
                         if cmd.find("EOFEND:") != -1:
                             print("====custom command end====")
                             break
-                        print("set command " + cmd)
                         write_con(cmd, 0.5)
                 case "SYSS:":
-                    print("sys comand")
+                    print("====sys comand====")
+                    all_cmd = ''
                     for cmd in file:
+                        if len(cmd.strip()) == 0:
+                            continue
+
                         if cmd.find("SYSEND:") != -1:
+                            print(all_cmd)
+                            syscmd(all_cmd, 0.5)
                             print("====sys command end====")
                             break
-                        print("set command " + cmd)
-                        syscmd(cmd, 0.5)
+
+                        cmd = cmd.strip() + '; '
+                        all_cmd = all_cmd + cmd
 
                 case "PERIODIC":
                     file.seek(0, 0)
