@@ -71,11 +71,13 @@ def login():
             return
 
 def flash():
+    '''
     while True:
         mesg = read_con()
         if mesg.find('Ubuntu Core 20 on') != -1:
             login()
             break
+    '''
 
     write_con("sudo reboot")
 
@@ -120,24 +122,20 @@ def checkbox(runner_cfg):
 
     while True:
         mesg = read_con()
-        if mesg.find('submission') != -1 and mesg.find('.tar.xz') != -1:
-            report = mesg.replace('file://', '')
+        if mesg.find('file:///home/iotuc/report.tar.xz') != -1:
+            write_con('sudo ip link set en2 up')
+            write_con('sudo dhclient en2')
+            write_con('sudo ip addr change 10.102.89.207/23 dev en2')
 
-            while True:
-                mesg = read_con()
-                if mesg.find('Finished') != -1 and mesg.find('Plainbox Resume Wrapper') != -1:
-                    while True:
-                        login()
-                        write_con('sudo ip link set en2 up')
-                        write_con('sudo ip addr add 10.102.89.207/23 dev en2')
-                        time.sleep(3)
-                        cmd = 'sudo -u '+ os.getlogin( ) + ' sshpass -p iotuc scp iotuc@10.102.89.207:report.tar.xz .'
-                        os.system(cmd)
-                        send_mail(SUCCESS, 'auto sanity is finished', 'report.tar.xz')
-                        print('auto sanity is finished')
-                        return
+            time.sleep(3)
 
+            os.system('sudo -u an ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207')
+            os.system('sudo -u an ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
+            os.system('sudo -u an sshpass -p iotuc scp -v iotuc@10.102.89.207:report.tar.xz .')
 
+            send_mail(SUCCESS, 'auto sanity is finished', 'report.tar.xz')
+            print('auto sanity is finished')
+            return
 
 if __name__ == "__main__":
 
