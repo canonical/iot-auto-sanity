@@ -17,11 +17,6 @@ SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["an.wu@canonical.com"]
 
-hostname = ''
-ipaddr = ''
-
-report = ''
-cur_dir = ''
 def syscmd(message="", wait=0):
     os.system(message)
     time.sleep(wait)
@@ -47,7 +42,7 @@ def send_mail(status='failed', message='None', filename=''):
 
     if status == SUCCESS:
         filename = filename
-        attachment = open(cur_dir + '/' + filename, "rb")
+        attachment = open(filename, "rb")
         p = MIMEBase('application', 'octet-stream')
         p.set_payload((attachment).read())
         encoders.encode_base64(p)
@@ -119,7 +114,6 @@ def checkbox(runner_cfg):
     con.write(open( runner_cfg ,"rb").read())
     write_con('EOF')
     write_con('sudo checkbox-shiner.checkbox-cli ' + runner_cfg )
-
     while True:
         mesg = read_con()
         if mesg.find('file:///home/iotuc/report.tar.xz') != -1:
@@ -132,13 +126,21 @@ def checkbox(runner_cfg):
             os.system('sudo -u an ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207')
             os.system('sudo -u an ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
             os.system('sudo -u an sshpass -p iotuc scp -v iotuc@10.102.89.207:report.tar.xz .')
+            fileT= time.strftime("%Y%m%d%H%M")
+            mailT=time.strftime("%Y/%m/%d %H:%M")
 
-            send_mail(SUCCESS, 'auto sanity is finished', 'report.tar.xz')
-            print('auto sanity is finished')
+            if os.path.exists('report.tar.xz') == False:
+                send_mail(FAILED, 'auto sanity was failed, checkbox report is missing. - ' + mailT)
+                print('auto sanity is failed')
+            else:
+                report_name = 'report-' + fileT + '.tar.xz'
+                rename_cmd = 'mv report.tar.xz ' + report_name
+                os.system(rename_cmd)
+                send_mail(SUCCESS, 'auto sanity was finished on ' + mailT, report_name)
+                print('auto sanity is finished')
             return
 
 if __name__ == "__main__":
-
     com_port = "/dev/ttyUSB0"
     brate = 115200
 
@@ -149,10 +151,6 @@ if __name__ == "__main__":
         except serial.SerialException as e:
             print("{} retrying.....".format(e))
             time.sleep(1)
-
-    hostname = socket.gethostname()
-    ipaddr = socket.gethostbyname(hostname)
-    cur_dir = os.getcwd()
 
     with open('tplan') as file:
         for line in file:
