@@ -15,7 +15,7 @@ FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
 SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
-recipients = ["an.wu@canonical.com"]
+recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
 
 def syscmd(message="", wait=0):
     os.system(message)
@@ -81,7 +81,7 @@ def flash():
         if mesg.find('Fastboot:') != -1:
             write_con("\r\n")
             write_con("fastboot usb 0")
-            os.system('sudo uuu uc.lst')
+            syscmd('sudo uuu uc.lst')
             write_con('\x03')
             write_con('run bootcmd')
             break
@@ -123,9 +123,9 @@ def checkbox(runner_cfg):
 
             time.sleep(3)
 
-            os.system('sudo -u an ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207')
-            os.system('sudo -u an ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
-            os.system('sudo -u an sshpass -p iotuc scp -v iotuc@10.102.89.207:report.tar.xz .')
+            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207', 0.5)
+            syscmd('ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
+            syscmd('sshpass -p iotuc scp -v iotuc@10.102.89.207:report.tar.xz .', 0.5)
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 
@@ -134,8 +134,7 @@ def checkbox(runner_cfg):
                 print('auto sanity is failed')
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
-                rename_cmd = 'mv report.tar.xz ' + report_name
-                os.system(rename_cmd)
+                syscmd('mv report.tar.xz ' + report_name, 0.5)
                 send_mail(SUCCESS, 'auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
