@@ -226,7 +226,7 @@ if __name__ == "__main__":
                                     print("Wrong PERIODIC week format")
                                     sys.exit()
                                 elif len(act) < 4:
-                                    act[3] = ""
+                                    act[3] = "00:00"
 
                                 match act[2]:
                                     case "mon":
