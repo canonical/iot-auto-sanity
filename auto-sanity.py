@@ -1,5 +1,6 @@
 import serial
 import time
+import schedule
 import os
 import sys
 import smtplib
@@ -16,6 +17,8 @@ PASSWD = "ectgbttmpfsbxxrg"
 SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
+WORK_FLAG = False
+SCHEDULE_FLAG = False
 
 def syscmd(message="", wait=0):
     os.system(message)
@@ -139,6 +142,12 @@ def checkbox(runner_cfg):
                 print('auto sanity is finished')
             return
 
+def wakeup_work():
+    global WORK_FLAG
+    WORK_FLAG = True
+    print("====scheduled work start====")
+
+
 if __name__ == "__main__":
     com_port = "/dev/ttyUSB0"
     brate = 115200
@@ -198,21 +207,58 @@ if __name__ == "__main__":
                         all_cmd = all_cmd + cmd
 
                 case "PERIODIC":
-                    file.seek(0, 0)
-                    match act[1]:
-                        case "test":
-                            time.sleep(10)
-                        case "hour":
-                            time.sleep(3600)
-                        case "12hour":
-                            time.sleep(43200)
-                        case "day":
-                            time.sleep(86400)
-                        case "week":
-                            time.sleep(604800)
-                        case _:
-                            print("unknowen setting" + act[1])
-                            sys.exit()
+                    if len(act) < 2:
+                        print("Wrong PERIODIC format")
+                        sys.exit()
+
+                    if SCHEDULE_FLAG == False:
+                        match act[1]:
+                            case "test":
+                                schedule.every().minute.do(wakeup_work)
+                            case "hour":
+                                schedule.every().hour.at(":00").do(wakeup_work)
+                            case "day":
+                                if len(act) < 3:
+                                    act[2] = ""
+                                schedule.every().day.at(act[2]).do(wakeup_work)
+                            case "week":
+                                if len(act) < 3:
+                                    print("Wrong PERIODIC week format")
+                                    sys.exit()
+                                elif len(act) < 4:
+                                    act[3] = ""
+
+                                match act[2]:
+                                    case "mon":
+                                        schedule.every().monday.at(act[3]).do(wakeup_work)
+                                    case "tue":
+                                        schedule.every().tuesday.at(act[3]).do(wakeup_work)
+                                    case "wed":
+                                        schedule.every().wednesday.at(act[3]).do(wakeup_work)
+                                    case "thu":
+                                        schedule.every().thursday.at(act[3]).do(wakeup_work)
+                                    case "fri":
+                                        schedule.every().friday.at(act[3]).do(wakeup_work)
+                                    case "sat":
+                                        schedule.every().saturday.at(act[3]).do(wakeup_work)
+                                    case "sun":
+                                        schedule.every().sunday.at(act[3]).do(wakeup_work)
+                                    case _:
+                                        print("unknown day "+ act[2])
+                                        sys.exit()
+                            case _:
+                                print("unknown setting" + act[1])
+                                sys.exit()
+
+                        SCHEDULE_FLAG = True
+
+                    WORK_FLAG = False
+                    while WORK_FLAG == False:
+                        print("Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()), end="\r") 
+                        schedule.run_pending()
+                        time.sleep(30)
+
+                    file.seek(0,0)
 
                 case _:
                     print("not support command " + act[0])
