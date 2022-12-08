@@ -234,14 +234,14 @@ if __name__ == "__main__":
                                 schedule.every().hour.at(":00").do(wakeup_work)
                             case "day":
                                 if len(act) < 3:
-                                    act[2] = ""
+                                    act.append("00:00")
                                 schedule.every().day.at(act[2]).do(wakeup_work)
                             case "week":
                                 if len(act) < 3:
                                     print("Wrong PERIODIC week format")
                                     sys.exit()
                                 elif len(act) < 4:
-                                    act[3] = "00:00"
+                                    act.append("00:00")
 
                                 match act[2]:
                                     case "mon":
