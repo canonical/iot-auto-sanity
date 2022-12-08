@@ -112,6 +112,11 @@ def init_mode_login():
 
 def checkbox(cbox, channel, runner_cfg, classic):
     write_con('sudo snap install checkbox20')
+
+    # This is a workaround for Honeyell
+    if cbox == "checkbox-shiner":
+        write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
+
     if not classic:
         write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
     else:
