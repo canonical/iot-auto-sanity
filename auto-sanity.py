@@ -110,13 +110,18 @@ def init_mode_login():
                     return
 
 
-def checkbox(runner_cfg):
-    write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
-    write_con('sudo snap set checkbox-shiner slave=disabled')
+def checkbox(cbox, channel, runner_cfg, classic):
+    write_con('sudo snap install checkbox20')
+    if not classic:
+        write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
+    else:
+        write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
+
+    write_con('sudo snap set ' + cbox + ' slave=disabled')
     write_con('cat << EOF > ' + runner_cfg )
     con.write(open( runner_cfg ,"rb").read())
     write_con('EOF')
-    write_con('sudo checkbox-shiner.checkbox-cli ' + runner_cfg )
+    write_con('sudo ' + cbox + '.checkbox-cli ' + runner_cfg )
     while True:
         mesg = read_con()
         if mesg.find('file:///home/iotuc/report.tar.xz') != -1:
@@ -178,10 +183,15 @@ if __name__ == "__main__":
                     normal_login()
                 case "CHECKBOX":
                     print("====run checkbox====")
-                    if len(act) > 1:
-                        checkbox(act[1])
+                    if len(act) > 3:
+                        if len(act) == 4:
+                            act.append("")
+                        else:
+                            act[4] = "--" + act[4]
+
+                        checkbox(act[1], act[2], act[3], act[4])
                     else:
-                        print("please assign testrunner config file")
+                        print("please assign proper parameters")
                         sys.exit()
                 case "EOFS:":
                     print("====custom command start====")
