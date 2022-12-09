@@ -11,17 +11,6 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-MESSG = ["success", "failed"]
-SUCCESS = 0
-FAILED = 1
-PASSWD = "ectgbttmpfsbxxrg"
-SSHPWD = "passwd"
-fromaddr = "an.wu@canonical.com"
-recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
-WORK_FLAG = False
-SCHEDULE_FLAG = False
-columns = shutil.get_terminal_size().columns
-
 def syscmd(message="", wait=0):
     os.system(message)
     time.sleep(wait)
@@ -158,6 +147,18 @@ def wakeup_work():
     global WORK_FLAG
     WORK_FLAG = True
     print("====scheduled work start====")
+
+
+MESSG = ["success", "failed"]
+SUCCESS = 0
+FAILED = 1
+PASSWD = "ectgbttmpfsbxxrg"
+SSHPWD = "passwd"
+fromaddr = "an.wu@canonical.com"
+recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
+WORK_FLAG = False
+SCHEDULE_FLAG = False
+columns = shutil.get_terminal_size().columns
 
 
 if __name__ == "__main__":
