@@ -5,6 +5,7 @@ import os
 import sys
 import smtplib
 import socket
+import shutil
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -19,6 +20,7 @@ fromaddr = "an.wu@canonical.com"
 recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
 WORK_FLAG = False
 SCHEDULE_FLAG = False
+columns = shutil.get_terminal_size().columns
 
 def syscmd(message="", wait=0):
     os.system(message)
@@ -178,16 +180,16 @@ if __name__ == "__main__":
 
             match act[0]:
                 case "FLASH":
-                    print("====flash procedure====")
+                    print("======== flash procedure ========".center(columns))
                     flash()
                 case "INIT_LOGIN":
-                    print("====init login====")
+                    print("======== init login ========".center(columns))
                     init_mode_login()
                 case "LOGIN":
-                    print("====normal login====")
+                    print("======== normal login ========".center(columns))
                     normal_login()
                 case "CHECKBOX":
-                    print("====run checkbox====")
+                    print("======== run checkbox ========".center(columns))
                     if len(act) > 3:
                         if len(act) == 4:
                             act.append("")
@@ -199,14 +201,14 @@ if __name__ == "__main__":
                         print("please assign proper parameters")
                         sys.exit()
                 case "EOFS:":
-                    print("====custom command start====")
+                    print("======== custom command start ========".center(columns))
                     for cmd in file:
                         if cmd.find("EOFEND:") != -1:
-                            print("====custom command end====")
+                            print("======== custom command end ========".center(columns))
                             break
                         write_con(cmd, 0.5)
                 case "SYSS:":
-                    print("====sys comand====")
+                    print("======== sys comand ========".center(columns))
                     all_cmd = ''
                     for cmd in file:
                         if len(cmd.strip()) == 0:
@@ -215,7 +217,7 @@ if __name__ == "__main__":
                         if cmd.find("SYSEND:") != -1:
                             print(all_cmd)
                             syscmd(all_cmd, 0.5)
-                            print("====sys command end====")
+                            print("======== sys command end ========".center(columns))
                             break
 
                         cmd = cmd.strip() + '; '
@@ -269,7 +271,7 @@ if __name__ == "__main__":
 
                     WORK_FLAG = False
                     while WORK_FLAG == False:
-                        print("Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()), end="\r") 
+                        print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r") 
                         schedule.run_pending()
                         time.sleep(30)
 
