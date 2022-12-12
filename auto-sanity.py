@@ -129,7 +129,7 @@ def checkbox(cbox, channel, runner_cfg, classic):
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
                 syscmd('mv report.tar.xz ' + report_name, 0.5)
-                send_mail(SUCCESS, 'auto sanity was finished on ' + mailT, report_name)
+                send_mail(SUCCESS, runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
 
