@@ -59,17 +59,7 @@ def login():
             write_con("iotuc", 0.5)
             return
 
-def flash():
-    '''
-    while True:
-        mesg = read_con()
-        if mesg.find('Ubuntu Core 20 on') != -1:
-            login()
-            break
-    '''
-
-    write_con("sudo reboot")
-
+def deploy():
     while True:
         mesg = read_con()
         if mesg.find('Fastboot:') != -1:
@@ -180,9 +170,9 @@ if __name__ == "__main__":
                 continue
 
             match act[0]:
-                case "FLASH":
-                    print("======== flash procedure ========".center(columns))
-                    flash()
+                case "DEPLOY":
+                    print("======== deploy procedure ========".center(columns))
+                    deploy()
                 case "INIT_LOGIN":
                     print("======== init login ========".center(columns))
                     init_mode_login()

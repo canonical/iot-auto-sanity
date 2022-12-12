@@ -15,7 +15,12 @@ cd ../
 sudo unxz iot-shiner-uc20-*.img.xz
 
 SYSEND:
-FLASH
+SYSS:
+usbrelay S2OD2_1=0
+sleep 3
+usbrelay S2OD2_1=1
+SYSEND:
+DEPLOY
 INIT_LOGIN
 CHECKBOX checkbox-shiner edge test-runner-imx8fire
 PERIODIC day 09:00
