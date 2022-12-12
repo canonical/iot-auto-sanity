@@ -181,14 +181,14 @@ def do_schedule(act):
     WORK_FLAG = False
     while WORK_FLAG == False:
         print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
-        schedule.run_pending()
         time.sleep(30)
+        schedule.run_pending()
 
 
 def wakeup_work():
     global WORK_FLAG
     WORK_FLAG = True
-    print("====scheduled work start====")
+    print("====scheduled work start====".center(columns))
 
 
 MESSG = ["success", "failed"]
@@ -276,9 +276,9 @@ if __name__ == "__main__":
 
                     WORK_FLAG = False
                     while WORK_FLAG == False:
-                        print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r") 
-                        schedule.run_pending()
+                        print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
                         time.sleep(30)
+                        schedule.run_pending()
 
                     file.seek(0,0)
 
