@@ -197,7 +197,7 @@ FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
 SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
-recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
+recipients = ["oem-sanity@lists.canonical.com", "an.wu@canonical.com"]
 WORK_FLAG = False
 columns = shutil.get_terminal_size().columns
 
