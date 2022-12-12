@@ -133,6 +133,58 @@ def checkbox(cbox, channel, runner_cfg, classic):
                 print('auto sanity is finished')
             return
 
+def do_schedule(act):
+    global WORK_FLAG
+    if len(act) < 2:
+        print("Wrong PERIODIC format")
+        sys.exit()
+
+    match act[1]:
+        case "test":
+            schedule.every().minute.do(wakeup_work)
+        case "hour":
+            schedule.every().hour.at(":00").do(wakeup_work)
+        case "day":
+            if len(act) < 3:
+                act.append("00:00")
+            schedule.every().day.at(act[2]).do(wakeup_work)
+        case "week":
+            if len(act) < 3:
+                print("Wrong PERIODIC week format")
+                sys.exit()
+            elif len(act) < 4:
+                act.append("00:00")
+
+            match act[2]:
+                case "mon":
+                    schedule.every().monday.at(act[3]).do(wakeup_work)
+                case "tue":
+                    schedule.every().tuesday.at(act[3]).do(wakeup_work)
+                case "wed":
+                    schedule.every().wednesday.at(act[3]).do(wakeup_work)
+                case "thu":
+                    schedule.every().thursday.at(act[3]).do(wakeup_work)
+                case "fri":
+                    schedule.every().friday.at(act[3]).do(wakeup_work)
+                case "sat":
+                    schedule.every().saturday.at(act[3]).do(wakeup_work)
+                case "sun":
+                    schedule.every().sunday.at(act[3]).do(wakeup_work)
+                case _:
+                    print("unknown day "+ act[2])
+                    sys.exit()
+        case _:
+            print("unknown setting" + act[1])
+            sys.exit()
+
+
+    WORK_FLAG = False
+    while WORK_FLAG == False:
+        print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
+        schedule.run_pending()
+        time.sleep(30)
+
+
 def wakeup_work():
     global WORK_FLAG
     WORK_FLAG = True
@@ -147,7 +199,6 @@ SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["rex.tsai@canonical.com", "robert.liu@canonical.com", "soar.huang@canonical.com", "an.wu@canonical.com"]
 WORK_FLAG = False
-SCHEDULE_FLAG = False
 columns = shutil.get_terminal_size().columns
 
 
@@ -162,6 +213,13 @@ if __name__ == "__main__":
         except serial.SerialException as e:
             print("{} retrying.....".format(e))
             time.sleep(1)
+
+    with open("tplan", "r") as file:
+        last_line = file.readlines()[-1]
+        act = last_line.split()
+        if act[0] == 'PERIODIC':
+            do_schedule(act)
+
 
     with open('tplan') as file:
         for line in file:
@@ -215,50 +273,6 @@ if __name__ == "__main__":
                         all_cmd = all_cmd + cmd
 
                 case "PERIODIC":
-                    if len(act) < 2:
-                        print("Wrong PERIODIC format")
-                        sys.exit()
-
-                    if SCHEDULE_FLAG == False:
-                        match act[1]:
-                            case "test":
-                                schedule.every().minute.do(wakeup_work)
-                            case "hour":
-                                schedule.every().hour.at(":00").do(wakeup_work)
-                            case "day":
-                                if len(act) < 3:
-                                    act.append("00:00")
-                                schedule.every().day.at(act[2]).do(wakeup_work)
-                            case "week":
-                                if len(act) < 3:
-                                    print("Wrong PERIODIC week format")
-                                    sys.exit()
-                                elif len(act) < 4:
-                                    act.append("00:00")
-
-                                match act[2]:
-                                    case "mon":
-                                        schedule.every().monday.at(act[3]).do(wakeup_work)
-                                    case "tue":
-                                        schedule.every().tuesday.at(act[3]).do(wakeup_work)
-                                    case "wed":
-                                        schedule.every().wednesday.at(act[3]).do(wakeup_work)
-                                    case "thu":
-                                        schedule.every().thursday.at(act[3]).do(wakeup_work)
-                                    case "fri":
-                                        schedule.every().friday.at(act[3]).do(wakeup_work)
-                                    case "sat":
-                                        schedule.every().saturday.at(act[3]).do(wakeup_work)
-                                    case "sun":
-                                        schedule.every().sunday.at(act[3]).do(wakeup_work)
-                                    case _:
-                                        print("unknown day "+ act[2])
-                                        sys.exit()
-                            case _:
-                                print("unknown setting" + act[1])
-                                sys.exit()
-
-                        SCHEDULE_FLAG = True
 
                     WORK_FLAG = False
                     while WORK_FLAG == False:
