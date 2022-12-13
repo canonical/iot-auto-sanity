@@ -1,9 +1,8 @@
 environment
 1. ubuntu os
-2. python3
-    a. pyserail lib
-    a. schedule lib
-3. git
+2. apt get install python3 python3-pip git sshpass usbrelay uuu
+3. pip3 install pyserail schedule
+4. snap install snapcraft --channel 6.x/stable
 
 
 command guide
