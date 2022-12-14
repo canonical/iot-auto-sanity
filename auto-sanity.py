@@ -12,8 +12,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 def syscmd(message="", wait=0):
-    os.system(message)
+    status = os.system(message)
     time.sleep(wait)
+    return status
 
 def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
@@ -92,6 +93,8 @@ def init_mode_login():
 
 
 def checkbox(cbox, channel, runner_cfg, classic):
+    retry = 0
+    status = -1
     write_con('sudo snap install checkbox20')
 
     # This is a workaround for Honeyell
@@ -115,7 +118,13 @@ def checkbox(cbox, channel, runner_cfg, classic):
             write_con('sudo dhclient en2')
             write_con('sudo ip addr change 10.102.89.207/23 dev en2')
 
-            time.sleep(3)
+            while status != 0:
+                retry += 1
+                if retry > 10:
+                    send_mail(FAILED, 'auto sanity was failed, target device connection timeout.')
+                    return
+
+                status = syscmd("ping -c 1 10.102.89.207", 1)
 
             syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207', 0.5)
             syscmd('ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
