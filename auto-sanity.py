@@ -92,7 +92,7 @@ def init_mode_login():
                     return
 
 
-def checkbox(cbox, channel, runner_cfg, classic):
+def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
     retry = 0
     status = -1
     write_con('sudo snap install checkbox20')
@@ -114,9 +114,9 @@ def checkbox(cbox, channel, runner_cfg, classic):
     while True:
         mesg = read_con()
         if mesg.find('file:///home/iotuc/report.tar.xz') != -1:
-            write_con('sudo ip link set en2 up')
-            write_con('sudo dhclient en2')
-            write_con('sudo ip addr change 10.102.89.207/23 dev en2')
+            write_con('sudo ip link set ' +  IF + ' up')
+            write_con('sudo dhclient ' + IF)
+            write_con('sudo ip addr change '+ ADDR +'/23 dev ' + IF)
 
             while status != 0:
                 retry += 1
@@ -124,11 +124,11 @@ def checkbox(cbox, channel, runner_cfg, classic):
                     send_mail(FAILED, 'auto sanity was failed, target device connection timeout.')
                     return
 
-                status = syscmd("ping -c 1 10.102.89.207", 1)
+                status = syscmd("ping -c 1 " + ADDR, 1)
 
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R 10.102.89.207', 0.5)
-            syscmd('ssh-keyscan -H 10.102.89.207  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
-            syscmd('sshpass -p iotuc scp -v iotuc@10.102.89.207:report.tar.xz .', 0.5)
+            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
+            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
+            syscmd('sshpass -p iotuc scp -v iotuc@' + ADDR + ':report.tar.xz .', 0.5)
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 
@@ -250,12 +250,12 @@ if __name__ == "__main__":
                 case "CHECKBOX":
                     print("======== run checkbox ========".center(columns))
                     if len(act) > 3:
-                        if len(act) == 4:
+                        if len(act) == 6:
                             act.append("")
                         else:
-                            act[4] = "--" + act[4]
+                            act[6] = "--" + act[6]
 
-                        checkbox(act[1], act[2], act[3], act[4])
+                        checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
                     else:
                         print("please assign proper parameters")
                         sys.exit()

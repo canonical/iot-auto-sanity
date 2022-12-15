@@ -7,7 +7,7 @@ environment
 
 command guide
 CHECKBOX:
-    CHECKBOX <checkbox name> <channel> <test plan> [classic]
+    CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
 
 PERIODIC:
     hour example:

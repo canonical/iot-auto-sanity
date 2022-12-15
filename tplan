@@ -22,5 +22,5 @@ usbrelay S2OD2_1=1
 SYSEND:
 DEPLOY
 INIT_LOGIN
-CHECKBOX checkbox-shiner edge test-runner-imx8fire
+CHECKBOX en2 10.102.89.207 checkbox-shiner edge test-runner-imx8fire
 PERIODIC day 09:00
