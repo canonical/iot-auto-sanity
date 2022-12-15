@@ -217,6 +217,7 @@ if __name__ == "__main__":
 
     while True:
         try:
+            syscmd("sudo chmod 666 " + com_port)
             con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
             break;
         except serial.SerialException as e:
