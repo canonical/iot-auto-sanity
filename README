@@ -1,8 +1,12 @@
-environment
+setup environment
 1. ubuntu os
 2. apt get install python3 python3-pip git sshpass usbrelay uuu
 3. pip3 install pyserail schedule
 4. snap install snapcraft --channel 6.x/stable
+
+program your test
+1. please program your plan using commands below(or refer to tplan file):
+2. After you finished your plan, you can run auto-sanity by command "python3 auto-sanity.py <your plan's name>"
 
 
 command guide
@@ -20,6 +24,7 @@ DEPLOY:
         DEPLOY uuu
 
 CHECKBOX:
+    you need to get the checkbox test plan first, please refer to QA team or file test-runner-imx8fire
     CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
 
 INIT_LOGIN:
