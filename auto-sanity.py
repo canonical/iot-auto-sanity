@@ -238,8 +238,13 @@ columns = shutil.get_terminal_size().columns
 
 
 if __name__ == "__main__":
+    args = sys.argv[1:]
+    if len(args) < 1:
+        print("please assign your plan as example:\npython3 auto-sanity.py <your plan file name>")
+        sys.exit()
 
-    with open("tplan", "r") as file:
+    plan = args[0]
+    with open(plan, "r") as file:
         setup = file.readlines()
         act = setup[0].split()
         if act[0] == 'CFG':
@@ -253,7 +258,7 @@ if __name__ == "__main__":
             do_schedule(act)
 
 
-    with open('tplan') as file:
+    with open(plan) as file:
         for line in file:
             act = line.split()
             if len(act) == 0:
