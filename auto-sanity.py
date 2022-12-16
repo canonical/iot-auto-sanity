@@ -60,16 +60,20 @@ def login():
             write_con("iotuc", 0.5)
             return
 
-def deploy():
-    while True:
-        mesg = read_con()
-        if mesg.find('Fastboot:') != -1:
-            write_con("\r\n")
-            write_con("fastboot usb 0")
-            syscmd('sudo uuu uc.lst')
-            write_con('\x03')
-            write_con('run bootcmd')
-            break
+def deploy(method):
+    match method:
+        case 'uuu':
+            while True:
+                mesg = read_con()
+                if mesg.find('Fastboot:') != -1:
+                    write_con("\r\n")
+                    write_con("fastboot usb 0")
+                    syscmd('sudo uuu uc.lst')
+                    write_con('\x03')
+                    write_con('run bootcmd')
+                    break
+        case _:
+            return FAILED
 
 def normal_login():
     while True:
@@ -240,7 +244,10 @@ if __name__ == "__main__":
             match act[0]:
                 case "DEPLOY":
                     print("======== deploy procedure ========".center(columns))
-                    deploy()
+                    if len(act) < 2:
+                        print("deploy command format invalied")
+                        sys.exit()
+                    deploy(act[1])
                 case "INIT_LOGIN":
                     print("======== init login ========".center(columns))
                     init_mode_login()

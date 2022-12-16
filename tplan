@@ -20,7 +20,7 @@ usbrelay S2OD2_1=0
 sleep 3
 usbrelay S2OD2_1=1
 SYSEND:
-DEPLOY
+DEPLOY uuu
 INIT_LOGIN
 CHECKBOX en2 10.102.89.207 checkbox-shiner edge test-runner-imx8fire
 PERIODIC day 09:00
