@@ -216,20 +216,26 @@ def wakeup_work():
     print("====scheduled work start====".center(columns))
 
 
+#mail
 MESSG = ["success", "failed"]
 SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
 fromaddr = "an.wu@canonical.com"
 recipients = ["oem-sanity@lists.canonical.com", "rex.tsai@canonical.com", "robert.liu@canonical.com", "ethan.hsieh@canonical.com", "soar.huang@canonical.com", "aristo.chen@canonical.com", "laider.lai@canonical.com", "an.wu@canonical.com"]
-WORK_FLAG = False
-columns = shutil.get_terminal_size().columns
 
+#schedule
+WORK_FLAG = False
+
+# device
 project = 'unknown'
 device_uname = ""
 device_pwd = ""
 
+# console
 con = ""
+columns = shutil.get_terminal_size().columns
+
 
 if __name__ == "__main__":
 
