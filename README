@@ -13,10 +13,47 @@ CFG:
     example:
     CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
 
+DEPLOY:
+    for deploy target device
+    DEPLOY <method>
+    example:
+        DEPLOY uuu
+
 CHECKBOX:
     CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
 
+INIT_LOGIN:
+    This is use for first time system up after deploy
+
+LOGIN
+    This is for run mode login, make sure you run this command before power up due to it will check mode.
+
+EOFS:
+    target device system command, you can put your command between EOFS: and EOFEND:
+    example:
+    EOFS:
+    ls -l
+    cd /
+    ps -A
+    EOFEND:
+
+EOFEND:
+    Please see the instruction EOFS
+
+SYSS:
+    target device system command, you can put your command between EOFS: and EOFEND:
+    example:
+    SYSS:
+    ls -l
+    cd /
+    ps -A
+    SYSEND:
+
+SYSEND:
+    Please see the instruction SYSS
+
 PERIODIC:
+    This command must be in the last line in your plan
     hour example:
         PERIODIC hour
     daily example:
