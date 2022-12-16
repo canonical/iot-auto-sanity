@@ -1,3 +1,4 @@
+CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
 SYSS:
 
 rm imx-boot.bin

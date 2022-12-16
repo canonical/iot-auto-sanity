@@ -6,6 +6,13 @@ environment
 
 
 command guide
+CFG:
+    This command must be in the first line and must be in your plan
+    This is for config your project name and your target device's user name and password 
+    also your console
+    example:
+    CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
+
 CHECKBOX:
     CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
 

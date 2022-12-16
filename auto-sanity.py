@@ -16,6 +16,18 @@ def syscmd(message="", wait=0):
     time.sleep(wait)
     return status
 
+def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
+    global con
+    while True:
+        try:
+            syscmd("sudo chmod 666 " + com_port)
+            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
+            break;
+        except serial.SerialException as e:
+            print("{} retrying.....".format(e))
+            time.sleep(1)
+
+
 def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
     time.sleep(wait)
@@ -31,7 +43,7 @@ def send_mail(status='failed', message='None', filename=''):
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = ", ".join(recipients)
-    msg['Subject'] = "Auto Sanity " + MESSG[status] + "!!"
+    msg['Subject'] = project + " Auto Sanity " + MESSG[status] + "!!"
     body = "This is auto sanity bot notification\n" + message
     msg.attach(MIMEText(body, 'plain'))
 
@@ -56,8 +68,8 @@ def login():
         write_con()
         mesg = read_con()
         if mesg.find("ubuntu login:") != -1:
-            write_con("iotuc", 0.5)
-            write_con("iotuc", 0.5)
+            write_con(device_uname, 0.5)
+            write_con(device_pwd, 0.5)
             return
 
 def deploy(method):
@@ -117,7 +129,7 @@ def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
     write_con('sudo ' + cbox + '.checkbox-cli ' + runner_cfg )
     while True:
         mesg = read_con()
-        if mesg.find('file:///home/iotuc/report.tar.xz') != -1:
+        if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
             write_con('sudo ip link set ' +  IF + ' up')
             write_con('sudo dhclient ' + IF)
             write_con('sudo ip addr change '+ ADDR +'/23 dev ' + IF)
@@ -125,24 +137,24 @@ def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
             while status != 0:
                 retry += 1
                 if retry > 10:
-                    send_mail(FAILED, 'auto sanity was failed, target device connection timeout.')
+                    send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
                     return
 
                 status = syscmd("ping -c 1 " + ADDR, 1)
 
             syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
             syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
-            syscmd('sshpass -p iotuc scp -v iotuc@' + ADDR + ':report.tar.xz .', 0.5)
+            syscmd('sshpass -p ' + device_pwd + ' scp -v ' + device_uname + '@' + ADDR + ':report.tar.xz .', 0.5)
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 
             if os.path.exists('report.tar.xz') == False:
-                send_mail(FAILED, 'auto sanity was failed, checkbox report is missing. - ' + mailT)
+                send_mail(FAILED, project + ' auto sanity was failed, checkbox report is missing. - ' + mailT)
                 print('auto sanity is failed')
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
                 syscmd('mv report.tar.xz ' + report_name, 0.5)
-                send_mail(SUCCESS, runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
+                send_mail(SUCCESS, project + " run " + runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
 
@@ -208,29 +220,29 @@ MESSG = ["success", "failed"]
 SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
-SSHPWD = "passwd"
 fromaddr = "an.wu@canonical.com"
 recipients = ["oem-sanity@lists.canonical.com", "rex.tsai@canonical.com", "robert.liu@canonical.com", "ethan.hsieh@canonical.com", "soar.huang@canonical.com", "aristo.chen@canonical.com", "laider.lai@canonical.com", "an.wu@canonical.com"]
 WORK_FLAG = False
 columns = shutil.get_terminal_size().columns
 
+project = 'unknown'
+device_uname = ""
+device_pwd = ""
+
+con = ""
 
 if __name__ == "__main__":
-    com_port = "/dev/ttyUSB0"
-    brate = 115200
-
-    while True:
-        try:
-            syscmd("sudo chmod 666 " + com_port)
-            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
-            break;
-        except serial.SerialException as e:
-            print("{} retrying.....".format(e))
-            time.sleep(1)
 
     with open("tplan", "r") as file:
-        last_line = file.readlines()[-1]
-        act = last_line.split()
+        setup = file.readlines()
+        act = setup[0].split()
+        if act[0] == 'CFG':
+            project = act[1]
+            device_uname = act[2]
+            device_pwd = act[3]
+            connect_con(act[4], act[5])
+
+        act = setup[-1].split()
         if act[0] == 'PERIODIC':
             do_schedule(act)
 
@@ -298,7 +310,8 @@ if __name__ == "__main__":
                         schedule.run_pending()
 
                     file.seek(0,0)
-
+                case "CFG":
+                    print("")
                 case _:
                     print("not support command " + act[0])
 
