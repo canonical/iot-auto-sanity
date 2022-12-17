@@ -264,6 +264,9 @@ if __name__ == "__main__":
             device_uname = act[2]
             device_pwd = act[3]
             connect_con(act[4], act[5])
+        else:
+            print("No CFG in your plan, please read the README")
+            sys.exit()
 
         last_line = len(setup[-1])
         act = setup[-1].split()
