@@ -80,7 +80,9 @@ def deploy(method):
                 if mesg.find('Fastboot:') != -1:
                     write_con("\r\n")
                     write_con("fastboot usb 0")
-                    syscmd('sudo uuu uc.lst')
+                    if syscmd('sudo uuu uc.lst') != 0:
+                        send_mail(FAILED, project + ' auto sanity was failed, deploy failed.')
+                        return FAILED
                     write_con('\x03')
                     write_con('run bootcmd')
                     break
@@ -215,6 +217,12 @@ def wakeup_work():
     WORK_FLAG = True
     print("====scheduled work start====".center(columns))
 
+def next_round(file):
+    if schedule.get_jobs():
+        file.seek(0, os.SEEK_END)
+        file.seek(file.tell() - last_line, os.SEEK_SET)
+    else:
+        file.seek(0, os.SEEK_END)
 
 #mail
 MESSG = ["success", "failed"]
@@ -236,8 +244,12 @@ device_pwd = ""
 con = ""
 columns = shutil.get_terminal_size().columns
 
+# for move file pointer to last line
+last_line = 0
+
 
 if __name__ == "__main__":
+
     args = sys.argv[1:]
     if len(args) < 1:
         print("please assign your plan as example:\npython3 auto-sanity.py <your plan file name>")
@@ -253,12 +265,12 @@ if __name__ == "__main__":
             device_pwd = act[3]
             connect_con(act[4], act[5])
 
+        last_line = len(setup[-1])
         act = setup[-1].split()
         if act[0] == 'PERIODIC':
             do_schedule(act)
 
-
-    with open(plan) as file:
+    with open(plan, "r") as file:
         for line in file:
             act = line.split()
             if len(act) == 0:
@@ -270,7 +282,10 @@ if __name__ == "__main__":
                     if len(act) < 2:
                         print("deploy command format invalied")
                         sys.exit()
-                    deploy(act[1])
+
+                    if deploy(act[1]) == FAILED:
+                        next_round(file)
+
                 case "INIT_LOGIN":
                     print("======== init login ========".center(columns))
                     init_mode_login()
