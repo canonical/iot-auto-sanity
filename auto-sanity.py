@@ -297,7 +297,7 @@ if __name__ == "__main__":
                         init_mode_login()
                     case "LOGIN":
                         print("======== normal login ========".center(columns))
-                        normal_login()
+                        login()
                     case "CHECKBOX":
                         print("======== run checkbox ========".center(columns))
                         if len(act) > 3:
