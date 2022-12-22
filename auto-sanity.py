@@ -272,75 +272,79 @@ if __name__ == "__main__":
         act = setup[-1].split()
         if act[0] == 'PERIODIC':
             do_schedule(act)
+    try:
+        with open(plan, "r") as file:
+            for line in file:
+                act = line.split()
+                if len(act) == 0:
+                    continue
 
-    with open(plan, "r") as file:
-        for line in file:
-            act = line.split()
-            if len(act) == 0:
-                continue
+                match act[0]:
+                    case "DEPLOY":
+                        print("======== deploy procedure ========".center(columns))
+                        if len(act) < 2:
+                            print("deploy command format invalied")
+                            sys.exit()
 
-            match act[0]:
-                case "DEPLOY":
-                    print("======== deploy procedure ========".center(columns))
-                    if len(act) < 2:
-                        print("deploy command format invalied")
-                        sys.exit()
+                        if deploy(act[1]) == FAILED:
+                            next_round(file)
 
-                    if deploy(act[1]) == FAILED:
-                        next_round(file)
+                    case "INIT_LOGIN":
+                        print("======== init login ========".center(columns))
+                        init_mode_login()
+                    case "LOGIN":
+                        print("======== normal login ========".center(columns))
+                        normal_login()
+                    case "CHECKBOX":
+                        print("======== run checkbox ========".center(columns))
+                        if len(act) > 3:
+                            if len(act) == 6:
+                                act.append("")
+                            else:
+                                act[6] = "--" + act[6]
 
-                case "INIT_LOGIN":
-                    print("======== init login ========".center(columns))
-                    init_mode_login()
-                case "LOGIN":
-                    print("======== normal login ========".center(columns))
-                    normal_login()
-                case "CHECKBOX":
-                    print("======== run checkbox ========".center(columns))
-                    if len(act) > 3:
-                        if len(act) == 6:
-                            act.append("")
+                            checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
                         else:
-                            act[6] = "--" + act[6]
+                            print("please assign proper parameters")
+                            sys.exit()
+                    case "EOFS:":
+                        print("======== custom command start ========".center(columns))
+                        for cmd in file:
+                            if cmd.find("EOFEND:") != -1:
+                                print("======== custom command end ========".center(columns))
+                                break
+                            write_con(cmd, 0.5)
+                    case "SYSS:":
+                        print("======== sys comand ========".center(columns))
+                        all_cmd = ''
+                        for cmd in file:
+                            if len(cmd.strip()) == 0:
+                                continue
 
-                        checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
-                    else:
-                        print("please assign proper parameters")
-                        sys.exit()
-                case "EOFS:":
-                    print("======== custom command start ========".center(columns))
-                    for cmd in file:
-                        if cmd.find("EOFEND:") != -1:
-                            print("======== custom command end ========".center(columns))
-                            break
-                        write_con(cmd, 0.5)
-                case "SYSS:":
-                    print("======== sys comand ========".center(columns))
-                    all_cmd = ''
-                    for cmd in file:
-                        if len(cmd.strip()) == 0:
-                            continue
+                            if cmd.find("SYSEND:") != -1:
+                                print(all_cmd)
+                                syscmd(all_cmd, 0.5)
+                                print("======== sys command end ========".center(columns))
+                                break
 
-                        if cmd.find("SYSEND:") != -1:
-                            print(all_cmd)
-                            syscmd(all_cmd, 0.5)
-                            print("======== sys command end ========".center(columns))
-                            break
+                            cmd = cmd.strip() + '; '
+                            all_cmd = all_cmd + cmd
 
-                        cmd = cmd.strip() + '; '
-                        all_cmd = all_cmd + cmd
+                    case "PERIODIC":
 
-                case "PERIODIC":
+                        WORK_FLAG = False
+                        while WORK_FLAG == False:
+                            print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
+                            time.sleep(30)
+                            schedule.run_pending()
 
-                    WORK_FLAG = False
-                    while WORK_FLAG == False:
-                        print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
-                        time.sleep(30)
-                        schedule.run_pending()
+                        file.seek(0,0)
+                    case "CFG":
+                        print("")
+                    case _:
+                        print("not support command " + act[0])
+    except serial.SerialException as e:
+        print("device disconnected or multiple access on port?")
+        send_mail(FAILED, project + ' device disconnected or multiple access on port?')
 
-                    file.seek(0,0)
-                case "CFG":
-                    print("")
-                case _:
-                    print("not support command " + act[0])
 
