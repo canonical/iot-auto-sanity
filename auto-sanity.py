@@ -70,7 +70,10 @@ def login():
         if mesg.find("ubuntu login:") != -1:
             write_con(device_uname, 0.5)
             write_con(device_pwd, 0.5)
+        elif mesg.find("iotuc@") != -1:
             return
+
+        time.sleep(3)
 
 def deploy(method):
     match method:
