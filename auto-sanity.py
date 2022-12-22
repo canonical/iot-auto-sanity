@@ -92,7 +92,7 @@ def deploy(method):
         case _:
             return FAILED
 
-def normal_login():
+def run_login():
     while True:
         mesg = read_con()
         if mesg.find('snapd_recovery_mode=run') != -1:
@@ -295,6 +295,9 @@ if __name__ == "__main__":
                     case "INIT_LOGIN":
                         print("======== init login ========".center(columns))
                         init_mode_login()
+                    case "RUN_LOGIN":
+                        print("======== run mode login ========".center(columns))
+                        run_login()
                     case "LOGIN":
                         print("======== normal login ========".center(columns))
                         login()
