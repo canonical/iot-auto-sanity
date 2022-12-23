@@ -92,6 +92,8 @@ def deploy(method):
         case _:
             return FAILED
 
+    init_mode_login()
+
 def run_login():
     while True:
         mesg = read_con()
