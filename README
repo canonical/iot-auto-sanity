@@ -30,8 +30,11 @@ CHECKBOX:
 INIT_LOGIN:
     This is use for first time system up after deploy
 
-LOGIN
+RUN_LOGIN
     This is for run mode login, make sure you run this command before power up due to it will check mode.
+
+LOGIN
+    This is a command only for login and check login state, please use this command carefuly, should use it only when device is up already and waiting for login. 
 
 EOFS:
     target device system command, you can put your command between EOFS: and EOFEND:
