@@ -264,7 +264,7 @@ if __name__ == "__main__":
     with open(plan, "r") as file:
         setup = file.readlines()
         act = setup[0].split()
-        if act[0] == 'CFG':
+        if len(act) >= 6 and act[0] == 'CFG':
             project = act[1]
             device_uname = act[2]
             device_pwd = act[3]
