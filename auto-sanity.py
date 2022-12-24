@@ -1,5 +1,6 @@
 import serial, time, os, sys, socket
 import threading, schedule, smtplib, shutil
+from wrapt_timeout_decorator import *
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -31,8 +32,24 @@ def write_con(message="", wait=0):
     con.write(bytes((message + "\r\n").encode()))
     time.sleep(wait)
 
+def record(enable):
+    global RECORD
+    global LOG
+    if enable:
+        LOG = ""
+    else:
+        with open("log.txt", "w") as file:
+            file.write(LOG)
+
+    RECORD = enable
+
 def read_con():
+    global RECORD
+    global LOG
     mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+    if RECORD:
+        LOG = LOG + mesg + "\n"
+
     print(mesg)
     return mesg
 
@@ -46,7 +63,7 @@ def send_mail(status='failed', message='None', filename=''):
     body = "This is auto sanity bot notification\n" + message
     msg.attach(MIMEText(body, 'plain'))
 
-    if status == SUCCESS:
+    if filename != "":
         filename = filename
         attachment = open(filename, "rb")
         p = MIMEBase('application', 'octet-stream')
@@ -62,6 +79,7 @@ def send_mail(status='failed', message='None', filename=''):
     s.sendmail(fromaddr, recipients, text)
     s.quit()
 
+
 def login():
     while True:
         write_con()
@@ -73,6 +91,40 @@ def login():
             return
 
         time.sleep(3)
+
+def run_login():
+    while True:
+        mesg = read_con()
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Ubuntu Core 20 on') != -1:
+                    login()
+                    return
+
+@timeout(600)
+def __init_mode_login():
+    while True:
+        mesg = read_con()
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
+                    login()
+                    return
+
+def init_mode_login():
+    record(True)
+    try:
+        __init_mode_login()
+    except Exception:
+        record(False)
+        print("Initial Device failed")
+        send_mail(FAILED, project + ' auto sanity was failed. target device boot up failed in install mode', "log.txt")
+        return FAILED
+
+    record(False)
+
 
 def deploy(method):
     match method:
@@ -91,27 +143,8 @@ def deploy(method):
         case _:
             return FAILED
 
-    init_mode_login()
+    return init_mode_login()
 
-def run_login():
-    while True:
-        mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
-                if mesg.find('Ubuntu Core 20 on') != -1:
-                    login()
-                    return
-
-def init_mode_login():
-    while True:
-        mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
-                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    login()
-                    return
 
 
 def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
@@ -250,6 +283,10 @@ columns = shutil.get_terminal_size().columns
 
 # for move file pointer to last line
 last_line = 0
+
+# record log
+RECORD = False
+LOG = ""
 
 
 if __name__ == "__main__":
