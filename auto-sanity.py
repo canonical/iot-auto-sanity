@@ -1,12 +1,5 @@
-import serial
-import threading
-import time
-import schedule
-import os
-import sys
-import smtplib
-import socket
-import shutil
+import serial, time, os, sys, socket
+import threading, schedule, smtplib, shutil
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
