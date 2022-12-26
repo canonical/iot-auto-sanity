@@ -7,9 +7,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 def schedule_task_runner():
-    while True:
+    while TASK_RUNNER:
         schedule.run_pending()
-        time.sleep(30)
+        time.sleep(10)
 
 def syscmd(message="", wait=0):
     status = os.system(message)
@@ -271,6 +271,7 @@ recipients = ["an.wu@canonical.com"]
 
 #schedule
 WORK_FLAG = False
+TASK_RUNNER = True
 
 # device
 project = 'unknown'
@@ -394,4 +395,4 @@ if __name__ == "__main__":
         print("device disconnected or multiple access on port?")
         send_mail(FAILED, project + ' device disconnected or multiple access on port?')
 
-
+    TASK_RUNNER = False
