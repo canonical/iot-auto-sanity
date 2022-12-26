@@ -1,4 +1,5 @@
 import serial
+import threading
 import time
 import schedule
 import os
@@ -10,6 +11,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+
+def schedule_task_runner():
+    while True:
+        schedule.run_pending()
+        time.sleep(30)
 
 def syscmd(message="", wait=0):
     status = os.system(message)
@@ -277,6 +283,10 @@ if __name__ == "__main__":
         act = setup[-1].split()
         if act[0] == 'PERIODIC':
             do_schedule(act)
+
+    # start schedule task runner
+    task = threading.Thread(target = schedule_task_runner)
+    task.start()
     try:
         with open(plan, "r") as file:
             for line in file:
@@ -344,7 +354,6 @@ if __name__ == "__main__":
                         while WORK_FLAG == False:
                             print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
                             time.sleep(30)
-                            schedule.run_pending()
 
                         file.seek(0,0)
                     case "CFG":
