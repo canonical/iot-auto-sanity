@@ -123,11 +123,11 @@ def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
     # This is a workaround for Honeyell
     if cbox == "checkbox-shiner":
         write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
-
-    if not classic:
-        write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
     else:
-        write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
+        if not classic:
+            write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
+        else:
+            write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
 
     write_con('sudo snap set ' + cbox + ' slave=disabled')
     write_con('cat << EOF > ' + runner_cfg )
