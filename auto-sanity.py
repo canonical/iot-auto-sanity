@@ -235,7 +235,7 @@ SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
 fromaddr = "an.wu@canonical.com"
-recipients = ["oem-sanity@lists.canonical.com", "rex.tsai@canonical.com", "robert.liu@canonical.com", "ethan.hsieh@canonical.com", "soar.huang@canonical.com", "aristo.chen@canonical.com", "laider.lai@canonical.com", "an.wu@canonical.com"]
+recipients = ["an.wu@canonical.com"]
 
 #schedule
 WORK_FLAG = False
