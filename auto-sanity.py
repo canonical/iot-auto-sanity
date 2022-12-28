@@ -102,7 +102,7 @@ def run_login():
                     login()
                     return
 
-@timeout(600)
+@timeout(dec_timeout=600)
 def __init_mode_login():
     while True:
         mesg = read_con()
@@ -113,10 +113,10 @@ def __init_mode_login():
                     login()
                     return
 
-def init_mode_login():
+def init_mode_login(timeout=600):
     record(True)
     try:
-        __init_mode_login()
+        __init_mode_login(dec_timeout=timeout)
     except Exception:
         record(False)
         print("Initial Device failed")
@@ -126,7 +126,7 @@ def init_mode_login():
     record(False)
 
 
-def deploy(method):
+def deploy(method='uuu', timeout=600):
     match method:
         case 'uuu':
             while True:
@@ -143,7 +143,7 @@ def deploy(method):
         case _:
             return FAILED
 
-    return init_mode_login()
+    return init_mode_login(timeout)
 
 
 
@@ -332,12 +332,19 @@ if __name__ == "__main__":
                             print("deploy command format invalied")
                             sys.exit()
 
-                        if deploy(act[1]) == FAILED:
-                            next_round(file)
+                        if len(act) > 2:
+                            if deploy(act[1], act[2]) == FAILED:
+                                next_round(file)
+                        else:
+                            if deploy(act[1]) == FAILED:
+                                next_round(file)
 
                     case "INIT_LOGIN":
                         print("======== init login ========".center(columns))
-                        init_mode_login()
+                        if len(act) == 2:
+                            init_mode_login(act[1])
+                        else:
+                            init_mode_login()
                     case "RUN_LOGIN":
                         print("======== run mode login ========".center(columns))
                         run_login()

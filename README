@@ -14,21 +14,29 @@ CFG:
     This command must be in the first line and must be in your fire-plan
     This is for config your project name and your target device's user name and password 
     also your console
+
     example:
-    CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
+        CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
 
 DEPLOY:
     for deploy target device
-    DEPLOY <method>
+
+    command format:
+        DEPLOY <method> [timeout (default 600 seconds)]
     example:
         DEPLOY uuu
 
 CHECKBOX:
     you need to get the checkbox test plan first, please refer to QA team or file test-runner-imx8fire
-    CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
+
+    command format:
+        CHECKBOX <network interface> <network address> <checkbox name> <channel> <test plan> [classic]
 
 INIT_LOGIN:
     This is use for first time system up after deploy
+
+    command format:
+        INIT_LOGIN [timeout (default 600 seconds)]
 
 RUN_LOGIN
     This is for run mode login, make sure you run this command before power up due to it will check mode.
@@ -38,30 +46,33 @@ LOGIN
 
 EOFS:
     target device system command, you can put your command between EOFS: and EOFEND:
+
     example:
-    EOFS:
-    ls -l
-    cd /
-    ps -A
-    EOFEND:
+        EOFS:
+        ls -l
+        cd /
+        ps -A
+        EOFEND:
 
 EOFEND:
     Please see the instruction EOFS
 
 SYSS:
     target device system command, you can put your command between EOFS: and EOFEND:
+
     example:
-    SYSS:
-    ls -l
-    cd /
-    ps -A
-    SYSEND:
+        SYSS:
+        ls -l
+        cd /
+        ps -A
+        SYSEND:
 
 SYSEND:
     Please see the instruction SYSS
 
 PERIODIC:
     This command must be in the last line in your plan
+
     hour example:
         PERIODIC hour
     daily example:
