@@ -1,4 +1,4 @@
-import serial, time, os, sys, socket
+import serial, time, os, sys, socket, ipaddress
 import threading, schedule, smtplib, shutil
 from wrapt_timeout_decorator import *
 from email.mime.multipart import MIMEMultipart
@@ -147,7 +147,7 @@ def deploy(method='uuu', timeout=600):
 
 
 
-def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
+def checkbox(IF, cbox, channel, runner_cfg, classic):
     retry = 0
     status = -1
     write_con('sudo snap install checkbox20')
@@ -169,10 +169,19 @@ def checkbox(IF, ADDR, cbox, channel, runner_cfg, classic):
     while True:
         mesg = read_con()
         if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
-            write_con('sudo ip link set ' +  IF + ' up')
-            write_con('sudo dhclient ' + IF)
-            write_con('sudo ip addr change '+ ADDR +'/23 dev ' + IF)
+            write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
+            while True:
+                retry += 1
+                try:
+                    ADDR = read_con()
+                    ipaddress.ip_address(ADDR)
+                    break
+                except ValueError:
+                    if retry > 15:
+                        send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
+                        return
 
+            retry = 0
             while status != 0:
                 retry += 1
                 if retry > 10:
@@ -353,13 +362,13 @@ if __name__ == "__main__":
                         login()
                     case "CHECKBOX":
                         print("======== run checkbox ========".center(columns))
-                        if len(act) > 3:
-                            if len(act) == 6:
+                        if len(act) > 4:
+                            if len(act) == 5:
                                 act.append("")
                             else:
-                                act[6] = "--" + act[6]
+                                act[5] = "--" + act[5]
 
-                            checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
+                            checkbox(act[1], act[2], act[3], act[4], act[5])
                         else:
                             print("please assign proper parameters")
                             sys.exit()
