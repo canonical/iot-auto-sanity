@@ -147,7 +147,7 @@ def deploy(method='uuu', timeout=600):
 
 
 
-def checkbox(IF, cbox, channel, runner_cfg, classic):
+def checkbox(IF, cbox, channel, runner_cfg, secure_id, classic):
     retry = 0
     status = -1
     write_con('sudo snap install checkbox20')
@@ -202,6 +202,8 @@ def checkbox(IF, cbox, channel, runner_cfg, classic):
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
                 syscmd('mv report.tar.xz ' + report_name, 0.5)
+                print('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name)
+                syscmd('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name, 0.5)
                 send_mail(SUCCESS, project + " run " + runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
@@ -362,13 +364,13 @@ if __name__ == "__main__":
                         login()
                     case "CHECKBOX":
                         print("======== run checkbox ========".center(columns))
-                        if len(act) > 4:
-                            if len(act) == 5:
+                        if len(act) > 5:
+                            if len(act) == 6:
                                 act.append("")
                             else:
-                                act[5] = "--" + act[5]
+                                act[6] = "--" + act[6]
 
-                            checkbox(act[1], act[2], act[3], act[4], act[5])
+                            checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
                         else:
                             print("please assign proper parameters")
                             sys.exit()

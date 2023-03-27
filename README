@@ -1,8 +1,11 @@
 setup environment
 1. ubuntu os
-2. apt get install python3 python3-pip git sshpass usbrelay uuu
-3. pip3 install pyserail schedule wrapt_timeout_decorator
-4. snap install snapcraft --channel 6.x/stable
+2. sudo apt-get install python3 python3-pip git sshpass usbrelay uuu
+3. pip3 install pyserial schedule wrapt_timeout_decorator
+4. snap install checkbox22 (for zapper to enable upload report to C3)
+5. snap install checkbox --channel=22.04 --classic (for zapper to enable upload report to C3)
+4. snap install snapcraft --channel 6.x/stable (option, if you want to build image)
+
 
 program your test
 1. please program your plan using commands below(or refer to tplan file):
@@ -30,7 +33,7 @@ CHECKBOX:
     you need to get the checkbox test plan first, please refer to QA team or file test-runner-imx8fire
 
     command format:
-        CHECKBOX <network interface> <checkbox name> <channel> <test plan> [classic]
+        CHECKBOX <network interface> <checkbox name> <channel> <test plan> <secure ID> [classic]
 
 INIT_LOGIN:
     This is use for first time system up after deploy
