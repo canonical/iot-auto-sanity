@@ -6,6 +6,36 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
+def get_ip():
+    retry = 0
+
+    write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
+    while True:
+        retry += 1
+        try:
+            ADDR = read_con()
+            ipaddress.ip_address(ADDR)
+            return ADDR
+        except ValueError:
+            if retry > 15:
+                send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
+                return FAILED
+
+def check_net_connection(ADDR):
+    retry = 0
+    status = -1
+
+    while status != 0:
+        retry += 1
+        if retry > 10:
+            send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
+            return FAILED
+
+        status = syscmd("ping -c 1 " + ADDR, 1)
+
+    return SUCCESS
+
+
 def schedule_task_runner():
     while TASK_RUNNER:
         schedule.run_pending()
@@ -137,9 +167,30 @@ def deploy(method='uuu', timeout=600):
                     if syscmd('sudo uuu uc.lst') != 0:
                         send_mail(FAILED, project + ' auto sanity was failed, deploy failed.')
                         return FAILED
-                    write_con('\x03')
+                    write_con('\x03') #ctrl+c
                     write_con('run bootcmd')
                     break
+        case 'seed_override':
+            login()
+            ADDR = get_ip()
+            if ADDR == FAILED:
+                return FAILED
+
+            if check_net_connection(ADDR) == FAILED:
+                return FAILED
+
+            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
+            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
+            if syscmd('sshpass -p ' + device_pwd + ' scp -r seed ' + device_uname + '@' + ADDR + ':~/', 0.5) != 0:
+                print("Upload seed file failed")
+                return FAILED
+
+            write_con('sudo snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"')
+            write_con('cd ~/')
+            write_con('sudo rm -fr /run/mnt/ubuntu-seed/* ')
+            write_con('sudo cp -fr seed/* /run/mnt/ubuntu-seed/')
+            write_con('sudo snap reboot --install')
+
         case _:
             return FAILED
 
@@ -147,7 +198,7 @@ def deploy(method='uuu', timeout=600):
 
 
 
-def checkbox(IF, cbox, channel, runner_cfg, secure_id, classic):
+def checkbox(cbox, channel, runner_cfg, secure_id, classic):
     retry = 0
     status = -1
     write_con('sudo snap install checkbox20')
@@ -169,26 +220,12 @@ def checkbox(IF, cbox, channel, runner_cfg, secure_id, classic):
     while True:
         mesg = read_con()
         if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
-            write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
-            while True:
-                retry += 1
-                try:
-                    ADDR = read_con()
-                    ipaddress.ip_address(ADDR)
-                    break
-                except ValueError:
-                    if retry > 15:
-                        send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
-                        return
+            ADDR = get_ip()
+            if (ADDR == FAILED):
+                return FAILED
 
-            retry = 0
-            while status != 0:
-                retry += 1
-                if retry > 10:
-                    send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
-                    return
-
-                status = syscmd("ping -c 1 " + ADDR, 1)
+            if (check_net_connection(ADDR) == FAILED):
+                return FAILED
 
             syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
             syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
@@ -293,6 +330,9 @@ device_pwd = ""
 con = ""
 columns = shutil.get_terminal_size().columns
 
+#network
+IF='eth0'
+
 # for move file pointer to last line
 last_line = 0
 
@@ -317,6 +357,8 @@ if __name__ == "__main__":
             device_uname = act[2]
             device_pwd = act[3]
             connect_con(act[4], act[5])
+            IF = act[6]
+
         else:
             print("No CFG in your plan, please read the README")
             sys.exit()
@@ -364,13 +406,13 @@ if __name__ == "__main__":
                         login()
                     case "CHECKBOX":
                         print("======== run checkbox ========".center(columns))
-                        if len(act) > 5:
-                            if len(act) == 6:
+                        if len(act) > 4:
+                            if len(act) == 5:
                                 act.append("")
                             else:
-                                act[6] = "--" + act[6]
+                                act[5] = "--" + act[5]
 
-                            checkbox(act[1], act[2], act[3], act[4], act[5], act[6])
+                            checkbox(act[1], act[2], act[3], act[4], act[5])
                         else:
                             print("please assign proper parameters")
                             sys.exit()
