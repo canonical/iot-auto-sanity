@@ -403,6 +403,7 @@ if __name__ == "__main__":
                         while WORK_FLAG == False:
                             print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
                             time.sleep(30)
+                            schedule.run_pending()
 
                         file.seek(0,0)
                     case "CFG":
