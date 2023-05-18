@@ -14,12 +14,15 @@ program your test
 
 command guide
 CFG:
-    This command must be in the first line and must be in your fire-plan
+    This command must be in the first line and must be in your flow-plan
     This is for config your project name and your target device's user name and password 
     also your console
 
+    command format:
+        CFG <project name> <user name for target device> <password for target device> <console device> <baud rate> <target device network interface>
+
     example:
-        CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
+        CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200 eth0
 
 DEPLOY:
     for deploy target device

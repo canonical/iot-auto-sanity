@@ -1,4 +1,4 @@
-CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200
+CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200 en2
 SYSS:
 
 rm imx-boot.bin
@@ -22,5 +22,5 @@ sleep 3
 usbrelay S2OD2_1=1
 SYSEND:
 DEPLOY uuu
-CHECKBOX en2 checkbox-shiner edge example-test-runner-imx8fire 12345678
+CHECKBOX checkbox-shiner edge example-test-runner-imx8fire 12345678
 PERIODIC day 09:00
