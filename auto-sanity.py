@@ -190,6 +190,7 @@ def deploy(method='uuu', timeout=600):
             write_con('sudo rm -fr /run/mnt/ubuntu-seed/* ')
             write_con('sudo cp -fr seed/* /run/mnt/ubuntu-seed/')
             write_con('sudo snap reboot --install')
+            write_con('sudo reboot')
 
         case _:
             return FAILED
