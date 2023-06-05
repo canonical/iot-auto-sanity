@@ -9,11 +9,11 @@ from email import encoders
 def get_ip():
     retry = 0
 
-    write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
     while True:
         retry += 1
         try:
-            ADDR = read_con()
+            ADDR = write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
+            ADDR = ADDR.splitlines()[-1]
             ipaddress.ip_address(ADDR)
             return ADDR
         except ValueError:
@@ -31,7 +31,7 @@ def check_net_connection(ADDR):
             send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
             return FAILED
 
-        status = syscmd("ping -c 1 " + ADDR, 1)
+        status = syscmd("ping -c 1 " + ADDR)
 
     return SUCCESS
 
@@ -41,9 +41,9 @@ def schedule_task_runner():
         schedule.run_pending()
         time.sleep(10)
 
-def syscmd(message="", wait=0):
+def syscmd(message=""):
     status = os.system(message)
-    time.sleep(wait)
+    time.sleep(1)
     return status
 
 def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
@@ -57,10 +57,32 @@ def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
             print("{} retrying.....".format(e))
             time.sleep(1)
 
-
-def write_con(message="", wait=0):
+#due to command will not return "xxx@ubuntu"
+#we need to using different function to handle
+def login_write(message=""):
     con.write(bytes((message + "\r\n").encode()))
-    time.sleep(wait)
+    time.sleep(1)
+    mesg = read_con()
+    return mesg
+
+def write_con_no_wait(message=""):
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(1)
+
+def wait_response():
+    res =""
+    while True:
+        mesg = read_con()
+        if mesg.find(device_uname + "@") != -1:
+            return res
+        res = res + "\n" + mesg
+
+def write_con(message=""):
+    con.flushInput()
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(1)
+    mesg = wait_response()
+    return mesg
 
 def record(enable):
     global RECORD
@@ -109,14 +131,12 @@ def send_mail(status='failed', message='None', filename=''):
     s.sendmail(fromaddr, recipients, text)
     s.quit()
 
-
 def login():
     while True:
-        write_con()
-        mesg = read_con()
+        mesg = login_write()
         if mesg.find("ubuntu login:") != -1:
-            write_con(device_uname, 0.5)
-            write_con(device_pwd, 0.5)
+            login_write(device_uname)
+            login_write(device_pwd)
         elif mesg.find(device_uname + "@") != -1:
             return
 
@@ -162,13 +182,13 @@ def deploy(method='uuu', timeout=600):
             while True:
                 mesg = read_con()
                 if mesg.find('Fastboot:') != -1:
-                    write_con("\r\n")
-                    write_con("fastboot usb 0")
+                    write_con_no_wait()
+                    write_con_no_wait("fastboot usb 0")
                     if syscmd('sudo uuu uc.lst') != 0:
                         send_mail(FAILED, project + ' auto sanity was failed, deploy failed.')
                         return FAILED
-                    write_con('\x03') #ctrl+c
-                    write_con('run bootcmd')
+                    write_con_no_wait('\x03') #ctrl+c
+                    write_con_no_wait('run bootcmd')
                     break
         case 'seed_override':
             login()
@@ -179,9 +199,9 @@ def deploy(method='uuu', timeout=600):
             if check_net_connection(ADDR) == FAILED:
                 return FAILED
 
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
-            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
-            if syscmd('sshpass -p ' + device_pwd + ' scp -r seed ' + device_uname + '@' + ADDR + ':~/', 0.5) != 0:
+            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
+            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
+            if syscmd('sshpass -p ' + device_pwd + ' scp -r seed ' + device_uname + '@' + ADDR + ':~/') != 0:
                 print("Upload seed file failed")
                 return FAILED
 
@@ -217,7 +237,7 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
     write_con('cat << EOF > ' + runner_cfg )
     con.write(open( runner_cfg ,"rb").read())
     write_con('EOF')
-    write_con('sudo ' + cbox + '.checkbox-cli ' + runner_cfg )
+    write_con_no_wait('sudo ' + cbox + '.checkbox-cli ' + runner_cfg )
     while True:
         mesg = read_con()
         if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
@@ -228,9 +248,9 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
             if (check_net_connection(ADDR) == FAILED):
                 return FAILED
 
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR, 0.5)
-            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts', 0.5)
-            syscmd('sshpass -p ' + device_pwd + ' scp -v ' + device_uname + '@' + ADDR + ':report.tar.xz .', 0.5)
+            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
+            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
+            syscmd('sshpass -p ' + device_pwd + ' scp -v ' + device_uname + '@' + ADDR + ':report.tar.xz .')
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 
@@ -239,9 +259,9 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
                 print('auto sanity is failed')
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
-                syscmd('mv report.tar.xz ' + report_name, 0.5)
+                syscmd('mv report.tar.xz ' + report_name)
                 print('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name)
-                syscmd('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name, 0.5)
+                syscmd('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name)
                 send_mail(SUCCESS, project + " run " + runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
@@ -423,7 +443,7 @@ if __name__ == "__main__":
                             if cmd.find("EOFEND:") != -1:
                                 print("======== custom command end ========".center(columns))
                                 break
-                            write_con(cmd, 0.5)
+                            write_con(cmd)
                     case "SYSS:":
                         print("======== sys comand ========".center(columns))
                         all_cmd = ''
@@ -433,7 +453,7 @@ if __name__ == "__main__":
 
                             if cmd.find("SYSEND:") != -1:
                                 print(all_cmd)
-                                syscmd(all_cmd, 0.5)
+                                syscmd(all_cmd)
                                 print("======== sys command end ========".center(columns))
                                 break
 
