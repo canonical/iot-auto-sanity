@@ -287,26 +287,51 @@ def login():
 
         time.sleep(3)
 
+# This function is for noramal reboot, normal not include cloud-init part
+# So we check if "Ubuntu Core 20 on" show up before we login.
 def run_login():
+    INSTALL_MODE="install"
+    RUN_MODE="run"
+    LOGIN="login"
+    state = "install"
     while True:
         mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
+        match state:
+            case "install":
+                if mesg.find('snapd_recovery_mode=run') != -1:
+                    state=RUN_MODE
+            case "run":
                 if mesg.find('Ubuntu Core 20 on') != -1:
-                    login()
-                    return
+                    state=LOGIN
+            case "login":
+                login()
+                return
+            case _:
+                print("Unknowen state")
 
+
+# This function is for login after installitation, run mode would include cloud-init before we can login.
+# So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
 def __init_mode_login():
+    INSTALL_MODE="install"
+    RUN_MODE="run"
+    CLOUD_INIT="cloud-init"
+    state = "install"
     while True:
         mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
+        match state:
+            case "install":
+                if mesg.find('snapd_recovery_mode=run') != -1:
+                    state=RUN_MODE
+            case "run":
                 if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    login()
-                    return
+                    state=CLOUD_INIT
+            case "cloud-init":
+                login()
+                return
+            case _:
+                print("Unknowen state")
 
 def init_mode_login(timeout=600):
     record(True)
