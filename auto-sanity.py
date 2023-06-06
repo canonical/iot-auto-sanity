@@ -6,105 +6,14 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-def get_ip():
-    retry = 0
 
-    while True:
-        retry += 1
-        try:
-            ADDR = write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
-            ADDR = ADDR.splitlines()[-1]
-            ipaddress.ip_address(ADDR)
-            return ADDR
-        except ValueError:
-            if retry > 15:
-                send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
-                return FAILED
-
-def check_net_connection(ADDR):
-    retry = 0
-    status = -1
-
-    while status != 0:
-        retry += 1
-        if retry > 10:
-            send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
-            return FAILED
-
-        status = syscmd("ping -c 1 " + ADDR)
-
-    return SUCCESS
-
-
-def schedule_task_runner():
-    while TASK_RUNNER:
-        schedule.run_pending()
-        time.sleep(10)
-
-def syscmd(message=""):
-    status = os.system(message)
-    time.sleep(1)
-    return status
-
-def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
-    global con
-    while True:
-        try:
-            syscmd("sudo chmod 666 " + com_port)
-            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
-            break;
-        except serial.SerialException as e:
-            print("{} retrying.....".format(e))
-            time.sleep(1)
-
-#due to command will not return "xxx@ubuntu"
-#we need to using different function to handle
-def login_write(message=""):
-    con.write(bytes((message + "\r\n").encode()))
-    time.sleep(1)
-    mesg = read_con()
-    return mesg
-
-def write_con_no_wait(message=""):
-    con.write(bytes((message + "\r\n").encode()))
-    time.sleep(1)
-
-def wait_response():
-    res =""
-    while True:
-        mesg = read_con()
-        if mesg.find(device_uname + "@") != -1:
-            return res
-        res = res + "\n" + mesg
-
-def write_con(message=""):
-    con.flushInput()
-    con.write(bytes((message + "\r\n").encode()))
-    time.sleep(1)
-    mesg = wait_response()
-    return mesg
-
-def record(enable):
-    global RECORD
-    global LOG
-    if enable:
-        LOG = ""
-    else:
-        with open("log.txt", "w") as file:
-            file.write(LOG)
-
-    RECORD = enable
-
-def read_con():
-    global RECORD
-    global LOG
-    mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-    if RECORD:
-        LOG = LOG + mesg + "\n"
-
-    print(mesg)
-    return mesg
-
+#mail
+MESSG = ["success", "failed"]
+SUCCESS = 0
+FAILED = 1
+PASSWD = "ectgbttmpfsbxxrg"
+fromaddr = "an.wu@canonical.com"
+recipients = ["an.wu@canonical.com"]
 
 def send_mail(status='failed', message='None', filename=''):
 
@@ -131,50 +40,10 @@ def send_mail(status='failed', message='None', filename=''):
     s.sendmail(fromaddr, recipients, text)
     s.quit()
 
-def login():
-    while True:
-        mesg = login_write()
-        if mesg.find("ubuntu login:") != -1:
-            login_write(device_uname)
-            login_write(device_pwd)
-        elif mesg.find(device_uname + "@") != -1:
-            return
-
-        time.sleep(3)
-
-def run_login():
-    while True:
-        mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
-                if mesg.find('Ubuntu Core 20 on') != -1:
-                    login()
-                    return
-
-@timeout(dec_timeout=600)
-def __init_mode_login():
-    while True:
-        mesg = read_con()
-        if mesg.find('snapd_recovery_mode=run') != -1:
-            while True:
-                mesg = read_con()
-                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    login()
-                    return
-
-def init_mode_login(timeout=600):
-    record(True)
-    try:
-        __init_mode_login(dec_timeout=timeout)
-    except Exception:
-        record(False)
-        print("Initial Device failed")
-        send_mail(FAILED, project + ' auto sanity was failed. target device boot up failed in install mode', "log.txt")
-        return FAILED
-
-    record(False)
-
+def syscmd(message=""):
+    status = os.system(message)
+    time.sleep(1)
+    return status
 
 def deploy(method='uuu', timeout=600):
     match method:
@@ -216,7 +85,6 @@ def deploy(method='uuu', timeout=600):
             return FAILED
 
     return init_mode_login(timeout)
-
 
 
 def checkbox(cbox, channel, runner_cfg, secure_id, classic):
@@ -265,6 +133,219 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
                 send_mail(SUCCESS, project + " run " + runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
+
+#==============================================
+# This part is for network contrl
+#
+#==============================================
+
+#network
+IF='eth0'
+
+def get_ip():
+    retry = 0
+
+    while True:
+        retry += 1
+        try:
+            ADDR = write_con('ip address show ' + IF  + ' | grep \"inet \" | head -n 1 | cut -d \' \' -f 6 | cut -d \"/\" -f 1')
+            ADDR = ADDR.splitlines()[-1]
+            ipaddress.ip_address(ADDR)
+            return ADDR
+        except ValueError:
+            if retry > 15:
+                send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
+                return FAILED
+
+def check_net_connection(ADDR):
+    retry = 0
+    status = -1
+
+    while status != 0:
+        retry += 1
+        if retry > 10:
+            send_mail(FAILED, project + ' auto sanity was failed, target device connection timeout.')
+            return FAILED
+
+        status = syscmd("ping -c 1 " + ADDR)
+
+    return SUCCESS
+
+
+#==============================================
+# This part is for write and read serial
+#
+#==============================================
+
+# console
+con = ""
+columns = shutil.get_terminal_size().columns
+
+def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
+    global con
+    while True:
+        try:
+            syscmd("sudo chmod 666 " + com_port)
+            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
+            break;
+        except serial.SerialException as e:
+            print("{} retrying.....".format(e))
+            time.sleep(1)
+
+
+#due to command will not return "xxx@ubuntu"
+#we need to using different function to handle
+def login_write(message=""):
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(1)
+    mesg = read_con()
+    return mesg
+
+def write_con_no_wait(message=""):
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(1)
+
+def wait_response():
+    res =""
+    while True:
+        mesg = read_con()
+        if mesg.find(device_uname + "@") != -1:
+            return res
+        res = res + "\n" + mesg
+
+def write_con(message=""):
+    con.flushInput()
+    con.write(bytes((message + "\r\n").encode()))
+    time.sleep(1)
+    mesg = wait_response()
+    return mesg
+
+
+# record log
+RECORD = False
+LOG = ""
+
+def record(enable):
+    global RECORD
+    global LOG
+    if enable:
+        LOG = ""
+    else:
+        with open("log.txt", "w") as file:
+            file.write(LOG)
+
+    RECORD = enable
+
+def read_con():
+    global RECORD
+    global LOG
+    mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+    if RECORD:
+        LOG = LOG + mesg + "\n"
+
+    print(mesg)
+    return mesg
+
+
+def send_mail(status='failed', message='None', filename=''):
+
+    msg = MIMEMultipart()
+    msg['From'] = fromaddr
+    msg['To'] = ", ".join(recipients)
+    msg['Subject'] = project + " Auto Sanity " + MESSG[status] + "!!"
+    body = "This is auto sanity bot notification\n" + message
+    msg.attach(MIMEText(body, 'plain'))
+
+    if filename != "":
+        filename = filename
+        attachment = open(filename, "rb")
+        p = MIMEBase('application', 'octet-stream')
+        p.set_payload((attachment).read())
+        encoders.encode_base64(p)
+        p.add_header('Content-Disposition', "attachment; filename= %s" % filename )
+        msg.attach(p)
+
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.starttls()
+    s.login(fromaddr, PASSWD)
+    text = msg.as_string()
+    s.sendmail(fromaddr, recipients, text)
+    s.quit()
+
+#==============================================
+# This part is for login process
+#
+#=============================================
+def login():
+    while True:
+        mesg = login_write()
+        if mesg.find("ubuntu login:") != -1:
+            login_write(device_uname)
+            login_write(device_pwd)
+        elif mesg.find(device_uname + "@") != -1:
+            return
+
+        time.sleep(3)
+
+def run_login():
+    while True:
+        mesg = read_con()
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Ubuntu Core 20 on') != -1:
+                    login()
+                    return
+
+@timeout(dec_timeout=600)
+def __init_mode_login():
+    while True:
+        mesg = read_con()
+        if mesg.find('snapd_recovery_mode=run') != -1:
+            while True:
+                mesg = read_con()
+                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
+                    login()
+                    return
+
+def init_mode_login(timeout=600):
+    record(True)
+    try:
+        __init_mode_login(dec_timeout=timeout)
+    except Exception:
+        record(False)
+        print("Initial Device failed")
+        send_mail(FAILED, project + ' auto sanity was failed. target device boot up failed in install mode', "log.txt")
+        return FAILED
+
+    record(False)
+
+
+#==============================================
+# This part is for login process
+#
+#=============================================
+
+#schedule
+WORK_FLAG = False
+TASK_RUNNER = True
+
+def schedule_task_runner():
+    while TASK_RUNNER:
+        schedule.run_pending()
+        time.sleep(10)
+
+def wakeup_work():
+    global WORK_FLAG
+    WORK_FLAG = True
+    print("====scheduled work start====".center(columns))
+
+def next_round(file):
+    if schedule.get_jobs():
+        file.seek(0, os.SEEK_END)
+        file.seek(file.tell() - last_line, os.SEEK_SET)
+    else:
+        file.seek(0, os.SEEK_END)
 
 def do_schedule(act):
     global WORK_FLAG
@@ -318,49 +399,13 @@ def do_schedule(act):
         schedule.run_pending()
 
 
-def wakeup_work():
-    global WORK_FLAG
-    WORK_FLAG = True
-    print("====scheduled work start====".center(columns))
-
-def next_round(file):
-    if schedule.get_jobs():
-        file.seek(0, os.SEEK_END)
-        file.seek(file.tell() - last_line, os.SEEK_SET)
-    else:
-        file.seek(0, os.SEEK_END)
-
-#mail
-MESSG = ["success", "failed"]
-SUCCESS = 0
-FAILED = 1
-PASSWD = "ectgbttmpfsbxxrg"
-fromaddr = "an.wu@canonical.com"
-recipients = ["an.wu@canonical.com"]
-
-#schedule
-WORK_FLAG = False
-TASK_RUNNER = True
-
 # device
 project = 'unknown'
 device_uname = ""
 device_pwd = ""
 
-# console
-con = ""
-columns = shutil.get_terminal_size().columns
-
-#network
-IF='eth0'
-
 # for move file pointer to last line
 last_line = 0
-
-# record log
-RECORD = False
-LOG = ""
-
 
 if __name__ == "__main__":
 
