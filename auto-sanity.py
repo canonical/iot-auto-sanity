@@ -441,23 +441,25 @@ if __name__ == "__main__":
 
     plan = args[0]
     with open(plan, "r") as file:
-        setup = file.readlines()
-        act = setup[0].split()
-        if len(act) >= 6 and act[0] == 'CFG':
-            project = act[1]
-            device_uname = act[2]
-            device_pwd = act[3]
-            connect_con(act[4], act[5])
-            IF = act[6]
+        for line in file:
+            act = line.split()
+            if len(act) == 0:
+                    continue
 
-        else:
+            match act[0]:
+                case "CFG":
+                    project = act[1]
+                    device_uname = act[2]
+                    device_pwd = act[3]
+                    connect_con(act[4], act[5])
+                    IF = act[6]
+                    CFG_FOUND = True
+                case "PERIODIC":
+                    do_schedule(act)
+
+        if CFG_FOUND == False:
             print("No CFG in your plan, please read the README")
             sys.exit()
-
-        last_line = len(setup[-1])
-        act = setup[-1].split()
-        if act[0] == 'PERIODIC':
-            do_schedule(act)
 
     # start schedule task runner
     task = threading.Thread(target = schedule_task_runner)
