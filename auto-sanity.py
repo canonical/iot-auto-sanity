@@ -13,7 +13,7 @@ SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
 fromaddr = "an.wu@canonical.com"
-recipients = ["an.wu@canonical.com"]
+recipients = ["oem-sanity@lists.canonical.com","an.wu@canonical.com"]
 
 def send_mail(status='failed', message='None', filename=''):
 
@@ -453,6 +453,10 @@ if __name__ == "__main__":
                     device_pwd = act[3]
                     connect_con(act[4], act[5])
                     IF = act[6]
+                    if len(act) == 8:
+                        recipients.clear()
+                        recipients.append(act[7])
+
                     CFG_FOUND = True
                 case "PERIODIC":
                     do_schedule(act)
