@@ -19,7 +19,7 @@ CFG:
     also your console
 
     command format:
-        CFG <project name> <user name for target device> <password for target device> <console device> <baud rate> <target device network interface>
+        CFG <project name> <user name for target device> <password for target device> <console device> <baud rate> <target device network interface> [mail recepients]
 
     example:
         CFG firecpu2.0 iotuc iotuc /dev/ttyUSB0 115200 eth0
