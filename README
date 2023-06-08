@@ -28,7 +28,7 @@ DEPLOY:
     for deploy target device
 
     command format:
-        DEPLOY <method> [timeout (default 600 seconds)]
+        DEPLOY <method [uuu/seed_override]> <user init method [cloud-init/console-conf/system-user]> [timeout (default 600 seconds)]
     example:
         DEPLOY uuu
 

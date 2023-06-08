@@ -45,7 +45,7 @@ def syscmd(message=""):
     time.sleep(1)
     return status
 
-def deploy(method='uuu', timeout=600):
+def deploy(method,user_init ,timeout=600):
     match method:
         case 'uuu':
             while True:
@@ -84,7 +84,7 @@ def deploy(method='uuu', timeout=600):
         case _:
             return FAILED
 
-    return init_mode_login(timeout)
+    return init_mode_login(user_init, timeout)
 
 
 def checkbox(cbox, channel, runner_cfg, secure_id, classic):
@@ -276,6 +276,14 @@ def send_mail(status='failed', message='None', filename=''):
 # This part is for login process
 #
 #=============================================
+
+INSTALL_MODE="install"
+RUN_MODE="run"
+CLOUD_INIT="cloud-init"
+CONSOLE_CONF="console-conf"
+SYSTEM="system-user"
+LOGIN="login"
+
 def login():
     while True:
         mesg = login_write()
@@ -290,16 +298,11 @@ def login():
 # This function is for noramal reboot, normal not include cloud-init part
 # So we check if "Ubuntu Core 20 on" show up before we login.
 def run_login():
-    INSTALL_MODE="install"
-    RUN_MODE="run"
-    LOGIN="login"
-    state = "install"
+    state = RUN_MODE
+
     while True:
         mesg = read_con()
         match state:
-            case "install":
-                if mesg.find('snapd_recovery_mode=run') != -1:
-                    state=RUN_MODE
             case "run":
                 if mesg.find('Ubuntu Core 20 on') != -1:
                     state=LOGIN
@@ -313,30 +316,42 @@ def run_login():
 # This function is for login after installitation, run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
-def __init_mode_login():
-    INSTALL_MODE="install"
-    RUN_MODE="run"
-    CLOUD_INIT="cloud-init"
-    state = "install"
+def __init_mode_login(userinit="cloud"):
+    state = INSTALL_MODE
+
     while True:
         mesg = read_con()
         match state:
             case "install":
                 if mesg.find('snapd_recovery_mode=run') != -1:
-                    state=RUN_MODE
-            case "run":
-                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
-                    state=CLOUD_INIT
+                    match userinit:
+                        case "cloud-init":
+                            state=CLOUD_INIT
+                        case "console-conf":
+                            state=CONSOLE_CONF
+                        case "system-user":
+                            state=SYSTEM
+                        case _:
+                            print("unknowen method")
+
             case "cloud-init":
+                if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
+                    state=LOGIN
+
+            case "console-conf":
+                print("console-conf TBD")
+            case "system-user":
+                print("system user TBD")
+            case "login":
                 login()
                 return
             case _:
                 print("Unknowen state")
 
-def init_mode_login(timeout=600):
+def init_mode_login(user_init, timeout=600):
     record(True)
     try:
-        __init_mode_login(dec_timeout=timeout)
+        __init_mode_login(user_init, dec_timeout=timeout)
     except Exception:
         record(False)
         print("Initial Device failed")
@@ -478,15 +493,15 @@ if __name__ == "__main__":
                 match act[0]:
                     case "DEPLOY":
                         print("======== deploy procedure ========".center(columns))
-                        if len(act) < 2:
+                        if len(act) < 3:
                             print("deploy command format invalied")
                             sys.exit()
 
-                        if len(act) > 2:
-                            if deploy(act[1], act[2]) == FAILED:
+                        if len(act) > 3:
+                            if deploy(act[1], act[2], act[3]) == FAILED:
                                 next_round(file)
                         else:
-                            if deploy(act[1]) == FAILED:
+                            if deploy(act[1], act[2]) == FAILED:
                                 next_round(file)
 
                     case "INIT_LOGIN":
