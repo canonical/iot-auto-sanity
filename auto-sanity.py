@@ -42,7 +42,6 @@ def send_mail(status='failed', message='None', filename=''):
 
 def syscmd(message=""):
     status = os.system(message)
-    time.sleep(1)
     return status
 
 def deploy(method,user_init ,timeout=600):
