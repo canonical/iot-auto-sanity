@@ -1,4 +1,4 @@
-import serial, time, os, sys, socket, ipaddress
+import serial, time, os, sys, socket, ipaddress, re
 import threading, schedule, smtplib, shutil
 from wrapt_timeout_decorator import *
 from email.mime.multipart import MIMEMultipart
@@ -340,7 +340,8 @@ def __init_mode_login(userinit="cloud"):
             case "console-conf":
                 print("console-conf TBD")
             case "system-user":
-                print("system user TBD")
+                if re.search('Ubuntu Core 2[0-9] on', mesg):
+                    state=LOGIN
             case "login":
                 login()
                 return
