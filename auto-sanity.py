@@ -150,10 +150,12 @@ def get_ip():
             ADDR = ADDR.splitlines()[-1]
             ipaddress.ip_address(ADDR)
             return ADDR
-        except ValueError:
+        except Exception:
             if retry > 15:
                 send_mail(FAILED, project + ' auto sanity was failed, target device DHCP failed.')
                 return FAILED
+
+        time.sleep(1)
 
 def check_net_connection(ADDR):
     retry = 0
