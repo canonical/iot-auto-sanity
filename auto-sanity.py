@@ -73,7 +73,6 @@ def deploy(method,user_init ,timeout=600):
                 print("Upload seed file failed")
                 return FAILED
 
-            write_con('sudo snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"')
             write_con('cd ~/')
             write_con('sudo rm -fr /run/mnt/ubuntu-seed/* ')
             write_con('sudo cp -fr seed/* /run/mnt/ubuntu-seed/')
@@ -290,9 +289,8 @@ def login():
             login_write(device_uname)
             login_write(device_pwd)
         elif mesg.find(device_uname + "@") != -1:
+            write_con('sudo snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"')
             return
-
-        time.sleep(3)
 
 # This function is for noramal reboot, normal not include cloud-init part
 # So we check if "Ubuntu Core 20 on" show up before we login.
