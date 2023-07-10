@@ -76,8 +76,9 @@ def deploy(method,user_init ,timeout=600):
             write_con('cd ~/')
             write_con('sudo rm -fr /run/mnt/ubuntu-seed/* ')
             write_con('sudo cp -fr seed/* /run/mnt/ubuntu-seed/')
-            write_con('sudo snap reboot --install')
-            write_con('sudo reboot')
+            # We don't wait for prompt due to system could possible reboot immediately without prompt
+            write_con_no_wait('sudo snap reboot --install')
+            write_con_no_wait('sudo reboot')
 
         case _:
             return FAILED
