@@ -186,7 +186,7 @@ def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
     while True:
         try:
             syscmd("sudo chmod 666 " + com_port)
-            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None)
+            con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None, timeout=5)
             break;
         except serial.SerialException as e:
             print("{} retrying.....".format(e))
@@ -239,7 +239,11 @@ def record(enable):
 def read_con():
     global RECORD
     global LOG
-    mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+    while True:
+        mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+        if mesg != "":
+            break
+
     if RECORD:
         LOG = LOG + mesg + "\n"
 
