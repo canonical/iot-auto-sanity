@@ -289,6 +289,18 @@ CONSOLE_CONF="console-conf"
 SYSTEM="system-user"
 LOGIN="login"
 
+@timeout(dec_timeout=300)
+def wait_init_device():
+    while True:
+        changes = write_con('snap changes | grep "Initialize device"')
+        if changes.find("Done") != -1:
+            print(("Initialize device Done.").center(columns), end="\r")
+            break
+
+        print(("Initialize device: Doing...").center(columns), end="\r")
+        time.sleep(5)
+
+
 def login():
     while True:
         mesg = login_write()
@@ -364,6 +376,14 @@ def init_mode_login(user_init, timeout=600):
         return FAILED
 
     record(False)
+
+    try:
+        wait_init_device()
+    except Exception:
+        print("Initial Device timeout")
+        send_mail(FAILED, project + ' auto sanity was failed. target device Initial device timeout')
+        return FAILED
+
 
 
 #==============================================
