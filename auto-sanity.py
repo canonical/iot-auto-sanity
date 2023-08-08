@@ -332,7 +332,7 @@ def run_login():
 # This function is for login after installitation, run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
-def __init_mode_login(userinit="cloud"):
+def __init_mode_login(userinit=CLOUD_INIT):
     state = INSTALL_MODE
 
     while True:
@@ -340,15 +340,9 @@ def __init_mode_login(userinit="cloud"):
         match state:
             case "install":
                 if mesg.find('snapd_recovery_mode=run') != -1:
-                    match userinit:
-                        case "cloud-init":
-                            state=CLOUD_INIT
-                        case "console-conf":
-                            state=CONSOLE_CONF
-                        case "system-user":
-                            state=SYSTEM
-                        case _:
-                            print("unknowen method")
+                    state=RUN_MODE
+            case "run":
+                state=userinit
 
             case "cloud-init":
                 if mesg.find('Cloud-init') != -1 and mesg.find('finished') != -1:
