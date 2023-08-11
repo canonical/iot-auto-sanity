@@ -89,34 +89,30 @@ def deploy(method,user_init ,timeout=600):
 def checkbox(cbox, channel, runner_cfg, secure_id, classic):
     retry = 0
     status = -1
-    write_con('sudo snap install checkbox20')
+   
+    ADDR = get_ip()
+    if (ADDR == FAILED):
+        return FAILED
 
-    # This is a workaround for Honeyell
-    if cbox == "checkbox-shiner":
-        write_con('ls /var/lib/snapd/snaps/checkbox-shiner* | sort -r | head -n 1 | xargs sudo snap install --devmode')
+    if (check_net_connection(ADDR) == FAILED):
+        return FAILED
+
+    syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
+    syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
+    syscmd('sshpass -p ' + device_pwd + ' scp -v ' + runner_cfg + ' ' + device_uname + '@' + ADDR + ':~/')
+
+    write_con('sudo snap install checkbox20')
+    if not classic:
+        write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
     else:
-        if not classic:
-            write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
-        else:
-            write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
+        write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
 
     write_con('sudo snap set ' + cbox + ' slave=disabled')
-    write_con('cat << EOF > ' + runner_cfg )
-    con.write(open( runner_cfg ,"rb").read())
-    write_con('EOF')
+
     write_con_no_wait('sudo ' + cbox + '.checkbox-cli ' + runner_cfg )
     while True:
         mesg = read_con()
         if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
-            ADDR = get_ip()
-            if (ADDR == FAILED):
-                return FAILED
-
-            if (check_net_connection(ADDR) == FAILED):
-                return FAILED
-
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
-            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
             syscmd('sshpass -p ' + device_pwd + ' scp -v ' + device_uname + '@' + ADDR + ':report.tar.xz .')
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
