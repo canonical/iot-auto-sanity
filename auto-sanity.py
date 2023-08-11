@@ -487,9 +487,11 @@ if __name__ == "__main__":
                     device_pwd = act[3]
                     connect_con(act[4], act[5])
                     IF = act[6]
-                    if len(act) == 8:
-                        recipients.clear()
-                        recipients.append(act[7])
+                    if len(act) > 7:
+                        arg_index = 7
+                        while arg_index < len(act):
+                            recipients.append(act[arg_index])
+                            arg_index=arg_index+1
 
                     CFG_FOUND = True
                 case "PERIODIC":
