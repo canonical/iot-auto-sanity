@@ -8,7 +8,7 @@ from email import encoders
 
 
 #mail
-MESSG = ["success", "failed"]
+MESSG = ["finished", "failed"]
 SUCCESS = 0
 FAILED = 1
 PASSWD = "ectgbttmpfsbxxrg"
@@ -20,7 +20,7 @@ def send_mail(status='failed', message='None', filename=''):
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = ", ".join(recipients)
-    msg['Subject'] = project + " Auto Sanity " + MESSG[status] + "!!"
+    msg['Subject'] = project + " Auto Sanity was " + MESSG[status] + "!!"
     body = "This is auto sanity bot notification\n" + message
     msg.attach(MIMEText(body, 'plain'))
 
@@ -247,31 +247,6 @@ def read_con():
     print(mesg)
     return mesg
 
-
-def send_mail(status='failed', message='None', filename=''):
-
-    msg = MIMEMultipart()
-    msg['From'] = fromaddr
-    msg['To'] = ", ".join(recipients)
-    msg['Subject'] = project + " Auto Sanity " + MESSG[status] + "!!"
-    body = "This is auto sanity bot notification\n" + message
-    msg.attach(MIMEText(body, 'plain'))
-
-    if filename != "":
-        filename = filename
-        attachment = open(filename, "rb")
-        p = MIMEBase('application', 'octet-stream')
-        p.set_payload((attachment).read())
-        encoders.encode_base64(p)
-        p.add_header('Content-Disposition', "attachment; filename= %s" % filename )
-        msg.attach(p)
-
-    s = smtplib.SMTP('smtp.gmail.com', 587)
-    s.starttls()
-    s.login(fromaddr, PASSWD)
-    text = msg.as_string()
-    s.sendmail(fromaddr, recipients, text)
-    s.quit()
 
 #==============================================
 # This part is for login process
