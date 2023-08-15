@@ -36,7 +36,7 @@ CHECKBOX:
     you need to get the checkbox test plan first, please refer to QA team or file test-runner-imx8fire
 
     command format:
-        CHECKBOX <network interface> <checkbox name> <channel> <test plan> <secure ID> [classic]
+        CHECKBOX <checkbox name> <test plan> <secure ID> ["Description on C3"]
 
 INIT_LOGIN:
     This is use for first time system up after deploy

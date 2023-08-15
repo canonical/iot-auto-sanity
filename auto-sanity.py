@@ -86,7 +86,7 @@ def deploy(method,user_init ,timeout=600):
     return init_mode_login(user_init, timeout)
 
 
-def checkbox(cbox, channel, runner_cfg, secure_id, classic):
+def checkbox(cbox, runner_cfg, secure_id, desc):
     retry = 0
     status = -1
    
@@ -100,12 +100,6 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
     syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
     syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
     syscmd('sshpass -p ' + device_pwd + ' scp -v ' + runner_cfg + ' ' + device_uname + '@' + ADDR + ':~/')
-
-    write_con('sudo snap install checkbox20')
-    if not classic:
-        write_con('sudo snap install '+ cbox + ' --channel ' + channel + ' --devmode')
-    else:
-        write_con('sudo snap install '+ cbox + ' --channel ' + channel + " " + classic)
 
     write_con('sudo snap set ' + cbox + ' slave=disabled')
 
@@ -123,8 +117,8 @@ def checkbox(cbox, channel, runner_cfg, secure_id, classic):
             else:
                 report_name = 'report-' + fileT + '.tar.xz'
                 syscmd('mv report.tar.xz ' + report_name)
-                print('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name)
-                syscmd('checkbox.checkbox-cli submit -m test ' + secure_id + " " + report_name)
+                print('checkbox.checkbox-cli submit -m ' + desc + ' '  + secure_id + " " + report_name)
+                syscmd('checkbox.checkbox-cli submit -m ' + desc + ' ' + secure_id + " " + report_name)
                 send_mail(SUCCESS, project + " run " + runner_cfg + ' auto sanity was finished on ' + mailT, report_name)
                 print('auto sanity is finished')
             return
@@ -510,13 +504,18 @@ if __name__ == "__main__":
                         login()
                     case "CHECKBOX":
                         print("======== run checkbox ========".center(columns))
-                        if len(act) > 4:
-                            if len(act) == 5:
-                                act.append("")
-                            else:
-                                act[5] = "--" + act[5]
+                        if len(act) > 3:
+                            desc = ""
 
-                            checkbox(act[1], act[2], act[3], act[4], act[5])
+                            if len(act) > 4:
+                                ind=4
+                                while ind < len(act):
+                                    desc = desc + " " + act[ind]
+                                    ind = ind+1
+                            else:
+                                desc="\"auto sanity test\""
+
+                            checkbox(act[1], act[2], act[3], desc)
                         else:
                             print("please assign proper parameters")
                             sys.exit()

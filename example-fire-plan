@@ -22,5 +22,5 @@ sleep 3
 usbrelay S2OD2_1=1
 SYSEND:
 DEPLOY uuu
-CHECKBOX checkbox-shiner edge example-test-runner-imx8fire 12345678
+CHECKBOX checkbox-shiner example-test-runner-imx8fire 12345678 "auto-sanity daily test"
 PERIODIC day 09:00
