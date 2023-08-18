@@ -259,10 +259,10 @@ def wait_init_device():
     while True:
         changes = write_con('snap changes | grep "Initialize device"')
         if changes.find("Done") != -1:
-            print(("Initialize device Done.").center(columns), end="\r")
+            print(("Initialize device: connect to store: Done.").center(columns), end="\r")
             break
 
-        print(("Initialize device: Doing...").center(columns), end="\r")
+        print(("Initialize device: connect to store: Doing...").center(columns), end="\r")
         time.sleep(5)
 
 
@@ -330,8 +330,8 @@ def init_mode_login(user_init, timeout=600):
         __init_mode_login(user_init, dec_timeout=timeout)
     except Exception:
         record(False)
-        print("Initial Device failed")
-        send_mail(FAILED, project + ' auto sanity was failed. target device boot up failed in install mode', "log.txt")
+        print("Initial Device timeout: install mode or run mode timeout")
+        send_mail(FAILED, project + ' auto sanity was failed. Initial Device timeout: install mode or run mode timeout', "log.txt")
         return FAILED
 
     record(False)
@@ -339,8 +339,8 @@ def init_mode_login(user_init, timeout=600):
     try:
         wait_init_device()
     except Exception:
-        print("Initial Device timeout")
-        send_mail(FAILED, project + ' auto sanity was failed. target device Initial device timeout')
+        print("Initial Device timeout: connect to store timeout")
+        send_mail(FAILED, project + ' auto sanity was failed. Initial Device timeout: connect to store timeout')
         return FAILED
 
 
