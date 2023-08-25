@@ -1,0 +1,14 @@
+[project]
+name = "auto-sanity"
+description = "sanity tool for IoT project"
+readme = "README"
+dependencies = [
+    "pyserial",
+    "schedule",
+    "wrapt_timeout_decorator",
+]
+
+dynamic = ["version"]
+
+[project.scripts]
+auto-sanity = "sanity.agent_entry:main"
