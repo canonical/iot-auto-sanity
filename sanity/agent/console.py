@@ -1,0 +1,87 @@
+import shutil
+import serial
+import time
+from sanity.agent.cmd import syscmd
+from sanity.agent.style import columns
+
+class console:
+    con = None
+    device_uname=""
+
+    # record log
+    RECORD = False
+    LOG = ""
+
+    def __init__(self, uname, com_port = '/dev/ttyUSB0', brate=115200):
+        global con
+        global RECORD
+        global device_uname
+        RECORD = False
+        device_uname = uname
+        while True:
+            try:
+                syscmd("sudo chmod 666 " + com_port)
+                con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None, timeout=5)
+                break;
+            except serial.SerialException as e:
+                print("{} retrying.....".format(e))
+                time.sleep(1)
+
+
+    #due to command will not return "xxx@ubuntu"
+    #we need to using different function to handle
+    def login_write(self, message=""):
+        global con
+        con.write(bytes((message + "\r\n").encode()))
+        time.sleep(1)
+        mesg = self.read_con()
+        return mesg
+
+    def write_con_no_wait(self, message=""):
+        global con
+        con.write(bytes((message + "\r\n").encode()))
+        time.sleep(1)
+
+    def wait_response(self):
+        global device_uname
+        res =""
+        while True:
+            mesg = self.read_con()
+            if mesg.find(device_uname + "@") != -1:
+                return res
+            res = res + "\n" + mesg
+
+    def write_con(self, message=""):
+        global con
+        con.flushInput()
+        con.write(bytes((message + "\r\n").encode()))
+        time.sleep(1)
+        mesg = self.wait_response()
+        return mesg
+
+    def record(self, enable):
+        global RECORD
+        global LOG
+        if enable:
+            LOG = ""
+        else:
+            with open("log.txt", "w") as file:
+                file.write(LOG)
+
+        RECORD = enable
+
+    def read_con(self):
+        global RECORD
+        global LOG
+        global con
+
+        while True:
+            mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+            if mesg != "":
+                break
+
+        if RECORD:
+            LOG = LOG + mesg + "\n"
+
+        print(mesg)
+        return mesg
