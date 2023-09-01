@@ -16,9 +16,7 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
     if (check_net_connection(ADDR) == FAILED):
         return FAILED
 
-    syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
-    syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
-    syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -v ' + runner_cfg + ' ' + dev_data.device_uname + '@' + ADDR + ':~/')
+    syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -v -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ' + runner_cfg + ' ' + dev_data.device_uname + '@' + ADDR + ':~/')
 
     con.write_con('sudo snap set ' + cbox + ' slave=disabled')
 
@@ -26,7 +24,7 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
     while True:
         mesg = con.read_con()
         if mesg.find('file:///home/'+ dev_data.device_uname +'/report.tar.xz') != -1:
-            syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -v ' + dev_data.device_uname + '@' + ADDR + ':report.tar.xz .')
+            syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -v -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ' + dev_data.device_uname + '@' + ADDR + ':report.tar.xz .')
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 

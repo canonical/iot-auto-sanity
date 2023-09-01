@@ -67,9 +67,7 @@ def deploy(method,user_init ,timeout=600):
             if check_net_connection(ADDR) == FAILED:
                 return FAILED
 
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
-            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
-            if syscmd('sshpass -p ' + device_pwd + ' scp -r seed ' + device_uname + '@' + ADDR + ':~/') != 0:
+            if syscmd('sshpass -p ' + device_pwd + ' scp -r -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" seed ' + device_uname + '@' + ADDR + ':~/') != 0:
                 print("Upload seed file failed")
                 return FAILED
 
@@ -97,9 +95,7 @@ def checkbox(cbox, runner_cfg, secure_id, desc):
     if (check_net_connection(ADDR) == FAILED):
         return FAILED
 
-    syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
-    syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
-    syscmd('sshpass -p ' + device_pwd + ' scp -v ' + runner_cfg + ' ' + device_uname + '@' + ADDR + ':~/')
+    syscmd('sshpass -p ' + device_pwd + ' scp -v -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ' + runner_cfg + ' ' + device_uname + '@' + ADDR + ':~/')
 
     write_con('sudo snap set ' + cbox + ' slave=disabled')
 
@@ -107,7 +103,7 @@ def checkbox(cbox, runner_cfg, secure_id, desc):
     while True:
         mesg = read_con()
         if mesg.find('file:///home/'+ device_uname +'/report.tar.xz') != -1:
-            syscmd('sshpass -p ' + device_pwd + ' scp -v ' + device_uname + '@' + ADDR + ':report.tar.xz .')
+            syscmd('sshpass -p ' + device_pwd + ' scp -v -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ' + device_uname + '@' + ADDR + ':report.tar.xz .')
             fileT= time.strftime("%Y%m%d%H%M")
             mailT=time.strftime("%Y/%m/%d %H:%M")
 
