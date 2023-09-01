@@ -43,8 +43,8 @@ def deploy(con, method, user_init ,timeout=600):
                 return FAILED
 
             con.write_con('cd ~/')
-            con.write_con('sudo rm -r /run/mnt/ubuntu-seed/* ')
-            con.write_con('sudo cp -r seed/* /run/mnt/ubuntu-seed/')
+            con.write_con('cd /run/mnt/ubuntu-seed && sudo ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo rm -fr {} && cd ~/')
+            con.write_con('cd seed/ && ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/')
             # We don't wait for prompt due to system could possible reboot immediately without prompt
             con.write_con_no_wait('sudo snap reboot --install')
             con.write_con_no_wait('sudo reboot')
