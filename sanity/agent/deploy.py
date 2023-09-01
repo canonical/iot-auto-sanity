@@ -38,9 +38,7 @@ def deploy(con, method, user_init ,timeout=600):
             if check_net_connection(ADDR) == FAILED:
                 return FAILED
 
-            syscmd('ssh-keygen -f /home/' + os.getlogin( ) + '/.ssh/known_hosts -R ' + ADDR)
-            syscmd('ssh-keyscan -H ' + ADDR + '  >> /home/' + os.getlogin( ) + '/.ssh/known_hosts')
-            if syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -r seed ' + dev_data.device_uname + '@' + ADDR + ':~/') != 0:
+            if syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -r -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" seed ' + dev_data.device_uname + '@' + ADDR + ':~/') != 0:
                 print("Upload seed file failed")
                 return FAILED
 
