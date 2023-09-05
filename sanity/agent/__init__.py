@@ -6,7 +6,7 @@ from sanity.agent.mail import mail
 from sanity.agent.console import console
 from sanity.agent.scheduler import scheduler
 from sanity.agent.data import dev_data
-from sanity.agent import err
+from sanity.agent.err import *
 
 
 def start_agent(cfg):
