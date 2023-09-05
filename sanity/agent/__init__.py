@@ -24,7 +24,7 @@ def start_agent(cfg):
         dev_data.device_uname = act[2]
         dev_data.device_pwd = act[3]
         con = console(dev_data.device_uname, act[4], act[5])
-        IF = act[6]
+        dev_data.IF = act[6]
         if len(act) > 7:
             arg_index = 7
             while arg_index < len(act):
