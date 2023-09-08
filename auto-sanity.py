@@ -1,4 +1,4 @@
-import serial, time, os, sys, socket, ipaddress, re
+import serial, time, os, sys, socket, ipaddress, re, glob
 import threading, schedule, smtplib, shutil
 from wrapt_timeout_decorator import *
 from email.mime.multipart import MIMEMultipart
