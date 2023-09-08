@@ -75,7 +75,7 @@ def deploy(method,user_init ,timeout=600):
             write_con('cd /run/mnt/ubuntu-seed && sudo ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo rm -fr {} && cd ~/')
             write_con('cd seed/ && ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/')
             # We don't wait for prompt due to system could possible reboot immediately without prompt
-            write_con_no_wait('sudo snap reboot --install')
+            write_con_no_wait('sudo snap reboot --install ' + os.path.relpath(str(glob.glob('seed/systems/[0-9]*')[0]), "seed/systems"))
             write_con_no_wait('sudo reboot')
 
         case _:
