@@ -3,7 +3,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from sanity.agent import err
 from sanity.agent.data import dev_data
 
 class mail:
