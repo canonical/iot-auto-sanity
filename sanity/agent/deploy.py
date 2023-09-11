@@ -71,14 +71,35 @@ def wait_init_device(con):
 
 
 def login(con):
+    TPASS = "insecure"
+    chpass=False
     while True:
-        mesg = con.login_write()
+        mesg = con.read_con(False)
         if mesg.find("ubuntu login:") != -1:
-            con.login_write(dev_data.device_uname)
-            con.login_write(dev_data.device_pwd)
+            con.write_con_no_wait(dev_data.device_uname)
+
+        elif mesg.find("Password:") != -1:
+            con.write_con_no_wait(dev_data.device_pwd)
+
+        elif mesg.find("(current) UNIX password:") != -1:
+            con.write_con_no_wait(dev_data.device_pwd)
+            chpass=True
+
+        elif mesg.find("Enter new UNIX password") != -1:
+            con.write_con_no_wait(TPASS)
+
+        elif mesg.find("Retype new UNIX password:") != -1:
+            con.write_con_no_wait(TPASS)
+
         elif mesg.find(dev_data.device_uname + "@") != -1:
             con.write_con('sudo snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"')
+            if chpass == True:
+                con.write_con('sudo echo ' + dev_data.device_uname +  ':' + dev_data.device_pwd + ' | sudo chpasswd')
             return
+
+        elif mesg == "":
+            con.write_con_no_wait()
+
 
 # This function is for noramal reboot, normal not include cloud-init part
 # So we check if "Ubuntu Core 20 on" show up before we login.

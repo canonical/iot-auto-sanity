@@ -30,16 +30,11 @@ class console:
 
     #due to command will not return "xxx@ubuntu"
     #we need to using different function to handle
-    def login_write(self, message=""):
-        global con
-        con.write(bytes((message + "\r\n").encode()))
-        time.sleep(1)
-        mesg = self.read_con()
-        return mesg
-
     def write_con_no_wait(self, message=""):
         global con
-        con.write(bytes((message + "\r\n").encode()))
+        con.flushOutput()
+        time.sleep(0.1)
+        con.write(bytes((message + "\n").encode()))
         time.sleep(1)
 
     def wait_response(self):
@@ -53,8 +48,9 @@ class console:
 
     def write_con(self, message=""):
         global con
+        con.flushOutput()
         con.flushInput()
-        con.write(bytes((message + "\r\n").encode()))
+        con.write(bytes((message + "\n").encode()))
         time.sleep(1)
         mesg = self.wait_response()
         return mesg
@@ -70,14 +66,14 @@ class console:
 
         RECORD = enable
 
-    def read_con(self):
+    def read_con(self, HANDLE_EMPTY=True):
         global RECORD
         global LOG
         global con
 
         while True:
             mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-            if mesg != "":
+            if HANDLE_EMPTY == False or mesg != "":
                 break
 
         if RECORD:
