@@ -182,14 +182,10 @@ def connect_con(com_port = '/dev/ttyUSB0', brate=115200):
 
 #due to command will not return "xxx@ubuntu"
 #we need to using different function to handle
-def login_write(message=""):
-    con.write(bytes((message + "\r\n").encode()))
-    time.sleep(1)
-    mesg = read_con()
-    return mesg
-
 def write_con_no_wait(message=""):
-    con.write(bytes((message + "\r\n").encode()))
+    con.flushOutput()
+    time.sleep(0.1)
+    con.write(bytes((message + "\n").encode()))
     time.sleep(1)
 
 def wait_response():
@@ -201,8 +197,9 @@ def wait_response():
         res = res + "\n" + mesg
 
 def write_con(message=""):
+    con.flushOutput()
     con.flushInput()
-    con.write(bytes((message + "\r\n").encode()))
+    con.write(bytes((message + "\n").encode()))
     time.sleep(1)
     mesg = wait_response()
     return mesg
@@ -223,12 +220,12 @@ def record(enable):
 
     RECORD = enable
 
-def read_con():
+def read_con(HANDLE_EMPTY = True):
     global RECORD
     global LOG
     while True:
         mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
-        if mesg != "":
+        if HANDLE_EMPTY == False or mesg != "":
             break
 
     if RECORD:
@@ -236,7 +233,6 @@ def read_con():
 
     print(mesg)
     return mesg
-
 
 #==============================================
 # This part is for login process
@@ -263,14 +259,34 @@ def wait_init_device():
 
 
 def login():
+    TPASS = "insecure"
+    chpass=False
     while True:
-        mesg = login_write()
+        mesg = read_con(False)
         if mesg.find("ubuntu login:") != -1:
-            login_write(device_uname)
-            login_write(device_pwd)
+            write_con_no_wait(device_uname)
+
+        elif mesg.find("Password:") != -1:
+            write_con_no_wait(device_pwd)
+
+        elif mesg.find("(current) UNIX password:") != -1:
+            write_con_no_wait(device_pwd)
+            chpass=True
+
+        elif mesg.find("Enter new UNIX password") != -1:
+            write_con_no_wait(TPASS)
+
+        elif mesg.find("Retype new UNIX password:") != -1:
+            write_con_no_wait(TPASS)
+
         elif mesg.find(device_uname + "@") != -1:
             write_con('sudo snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"')
+            if chpass == True:
+                write_con('sudo echo ' + device_uname +  ':' + device_pwd + ' | sudo chpasswd')
             return
+
+        elif mesg == "":
+            write_con_no_wait()
 
 # This function is for noramal reboot, normal not include cloud-init part
 # So we check if "Ubuntu Core 20 on" show up before we login.
