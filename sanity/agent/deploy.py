@@ -49,6 +49,30 @@ def deploy(con, method, user_init ,timeout=600):
             con.write_con_no_wait('sudo snap reboot --install ' + os.path.relpath(str(glob.glob('seed/systems/[0-9]*')[0]), "seed/systems"))
             con.write_con_no_wait('sudo reboot')
 
+        case 'seed_override_lk':
+            login(con)
+            ADDR = get_ip(con)
+            if ADDR == FAILED:
+                return FAILED
+
+            if check_net_connection(ADDR) == FAILED:
+                return FAILED
+
+            # beside seed/, also copy additional files for little-kernel
+            if syscmd('sshpass -p ' + device_pwd + ' scp -r -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" seed boot.img snaprecoverysel.bin ' + device_uname + '@' + ADDR + ':~/') != 0:
+                print("Upload seed file failed")
+                return FAILED
+
+            con.write_con('cd ~/')
+            con.write_con('cd /run/mnt/ubuntu-seed && sudo ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo rm -fr {} && cd ~/')
+            con.write_con('cd seed/ && ls -lA | awk -F\':[0-9]* \' \'/:/{print $2}\' | xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/')
+            con.write_con('sudo cp boot.img /dev/disk/by-partlabel/boot-ra && cd ~/')
+            con.write_con('sudo cp snaprecoverysel.bin /dev/disk/by-partlabel/snaprecoverysel && cd ~/')
+            con.write_con('sudo cp snaprecoverysel.bin /dev/disk/by-partlabel/snaprecoveryselbak && cd ~/')
+            # We don't wait for prompt due to system could possible reboot immediately without prompt
+            con.write_con_no_wait('sudo snap reboot --install ' + os.path.relpath(str(glob.glob('seed/systems/[0-9]*')[0]), "seed/systems"))
+            con.write_con_no_wait('sudo reboot')
+
         case _:
             return FAILED
 
