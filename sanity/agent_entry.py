@@ -1,12 +1,14 @@
-import sys
+import argparse
 from sanity.agent import start_agent
 
-def main():
-    #handle the args
-    args = sys.argv[1:]
-    if len(args) < 1:
-        print("please assign your plan as example:\nauto-sanity <your plan file name>")
-        sys.exit()
 
-    # pass the configure file to real auto-sanity module
-    start_agent(args[0])
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sanity-launcher",
+        help="the launcher configuration for iot sanity",
+        required=True
+    )
+    args = parser.parse_args()
+
+    start_agent(args.sanity_launcher)

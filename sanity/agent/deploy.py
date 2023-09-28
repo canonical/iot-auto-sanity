@@ -15,6 +15,7 @@ CONSOLE_CONF="console-conf"
 SYSTEM="system-user"
 LOGIN="login"
 
+
 def deploy(con, method, user_init ,timeout=600):
     match method:
         case 'uuu':

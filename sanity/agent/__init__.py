@@ -1,5 +1,4 @@
 import sys
-import csv
 import serial
 from sanity.agent import agent
 from sanity.agent.mail import mail
@@ -7,40 +6,44 @@ from sanity.agent.console import console
 from sanity.agent.scheduler import scheduler
 from sanity.agent.data import dev_data
 from sanity.agent.err import *
+from sanity.launcher.parser import LauncherParser
 
 
 def start_agent(cfg):
-    plan=[]
-    sched = None
 
-    with open(cfg, "r") as file:
-        for line in file:
-            plan.append(line.strip('\n\r'))
-    plan = list(filter(None, plan))
+    lanncher_parser = LauncherParser(cfg)
+    launcher_data = lanncher_parser.data
 
-    act = plan[0].split()
-    if act[0] == "CFG":
-        dev_data.project = act[1]
-        dev_data.device_uname = act[2]
-        dev_data.device_pwd = act[3]
-        con = console(dev_data.device_uname, act[4], act[5])
-        dev_data.IF = act[6]
-        if len(act) > 7:
-            arg_index = 7
-            while arg_index < len(act):
-                mail.recipients.append(act[arg_index])
-                arg_index=arg_index+1
-
-    else:
+    if "config" not in launcher_data.keys():
         print("No CFG in your plan, please read the README")
         sys.exit()
 
-    act = plan[-1].split()
-    if act[0] == "PERIODIC":
-            sched = scheduler(act)
+    cfg_data = launcher_data["config"]
+
+    dev_data.project = cfg_data.get("project_name")
+    dev_data.device_uname = cfg_data.get("username")
+    dev_data.device_pwd = cfg_data.get("password")
+    con = console(
+        dev_data.device_uname,
+        cfg_data["serial_console"]["port"],
+        cfg_data["serial_console"]["baud_rate"]
+    )
+    dev_data.IF = cfg_data["network"]
+
+    if cfg_data.get("recipients"):
+        mail.recipients.append(cfg_data.get("recipients"))
+
+    if launcher_data.get("period"):
+        sched = scheduler(launcher_data.get("period"))
+    else:
+        sched = None
 
     try:
-        agent.start(plan, con, sched)
+        agent.start(launcher_data.get("run_stage"), con, sched)
     except serial.SerialException as e:
         print("device disconnected or multiple access on port?")
-        mail.send_mail(FAILED, dev_data.project + ' device disconnected or multiple access on port?')
+        mail.send_mail(
+            FAILED,
+            (f"{dev_data.project} device disconnected "
+             "or multiple access on port?")
+        )
