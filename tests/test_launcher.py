@@ -70,6 +70,7 @@ class LauncherParserTests(unittest.TestCase):
             yaml.dump(json_data, fp)
 
         launcher_obj = LauncherParser(fp.name)
+        launcher_obj.abd = "help"
         os.remove(filename)
 
         self.assertDictEqual(
@@ -169,11 +170,42 @@ class LauncherParserTests(unittest.TestCase):
 
         launcher_obj = LauncherParser(fp.name)
         os.remove(filename)
-
         self.assertDictEqual(
             launcher_obj.data,
             json_data
         )
+
+    def test_invalid_mail_recepient(self):
+        """
+        Checking full configuration data
+        """
+        json_data = {
+            "config": {
+                "project_name": "test_project1",
+                "username": "abc",
+                "password": "def",
+                "serial_console": {
+                    "port": "abc",
+                    "baud_rate": 115200
+                },
+                "network": "eth0",
+                "extra_recepients": [
+                    "abc@gmail.com",
+                    "gmail.com"
+                ]
+            },
+            "run_stage": ["run_login"],
+        }
+
+        _, filename = tempfile.mkstemp(suffix=".yaml")
+
+        with open(filename, "w") as fp:
+            json.dump(json_data, fp)
+
+        with self.assertRaises(ValueError):
+            LauncherParser(fp.name)
+
+        os.remove(filename)
 
     def test_valid_no_mail_part(self):
         """
@@ -206,3 +238,14 @@ class LauncherParserTests(unittest.TestCase):
             json_data
         )
 
+    def test_valid_high_pdk_part(self):
+
+        filename = "/home/stanley/Desktop/Git_Repos/iot-auto-sanity/tests/x8_high_MED.yaml"
+        with open(filename, "r") as fp:
+            json_data = yaml.load(fp, Loader=yaml.FullLoader)
+
+        launcher_obj = LauncherParser(filename)
+        self.assertDictEqual(
+            launcher_obj.data,
+            json_data
+        )
