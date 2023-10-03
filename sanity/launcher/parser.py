@@ -28,6 +28,7 @@ LAUNCHER_SCHEMA = {
                 "network": {"type": "string"},
                 "extra_recepients": {
                     "type": "array",
+                    "items": {"$ref": "#/$defs/mail_format"}
                 }
             },
             "required": [
@@ -41,7 +42,7 @@ LAUNCHER_SCHEMA = {
         "run_stage": {
             "type": "array",
             "minItems": 1,
-            "itemsif os.path.extfile": {
+            "items": {
                 "oneOf": [
                     {
                         "type": "string",
@@ -163,6 +164,10 @@ LAUNCHER_SCHEMA = {
         "mode": {
             "type": "string",
             "enum": ["hour", "day", "week", "test"]
+        },
+        "mail_format": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9]+@[a-zA-Z0-9.]+$"
         },
     }
 }
