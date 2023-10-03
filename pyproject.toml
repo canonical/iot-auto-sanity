@@ -3,6 +3,8 @@ name = "auto-sanity"
 description = "sanity tool for IoT project"
 readme = "README"
 dependencies = [
+    "jsonschema",
+    "pyyaml",
     "pyserial",
     "schedule",
     "wrapt_timeout_decorator",

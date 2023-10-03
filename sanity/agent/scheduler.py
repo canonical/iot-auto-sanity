@@ -1,4 +1,5 @@
 import schedule
+import sys
 import time
 import threading
 from sanity.agent.style import columns
@@ -31,23 +32,18 @@ class scheduler:
             print("Wrong PERIODIC format")
             sys.exit()
 
-        match act[1]:
+        match act.get("mode"):
             case "test":
                 schedule.every().minute.do(self.wakeup_work)
             case "hour":
                 schedule.every().hour.at(":00").do(self.wakeup_work)
             case "day":
-                if len(act) < 3:
-                    act.append("00:00")
-                schedule.every().day.at(act[2]).do(self.wakeup_work)
+                var = act.get("time", "00:00")
+                schedule.every().day.at(var).do(self.wakeup_work)
             case "week":
-                if len(act) < 3:
-                    print("Wrong PERIODIC week format")
-                    sys.exit()
-                elif len(act) < 4:
-                    act.append("00:00")
+                var = act.get("time", "00:00")
 
-                match act[2]:
+                match act.get("day"):
                     case "mon":
                         schedule.every().monday.at(act[3]).do(self.wakeup_work)
                     case "tue":
@@ -62,12 +58,9 @@ class scheduler:
                         schedule.every().saturday.at(act[3]).do(self.wakeup_work)
                     case "sun":
                         schedule.every().sunday.at(act[3]).do(self.wakeup_work)
-                    case _:
+                    case None:
                         print("unknown day "+ act[2])
                         sys.exit()
-            case _:
-                print("unknown setting" + act[1])
-                sys.exit()
 
 
         WORK_FLAG = False
