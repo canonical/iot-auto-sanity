@@ -35,7 +35,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 115200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "abc@gmail.com"
                 ]
@@ -102,7 +102,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 5200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "abc@gmail.com"
                 ]
@@ -165,7 +165,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 115200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "abc@gmail.com"
                 ]
@@ -185,9 +185,9 @@ class LauncherParserTests(unittest.TestCase):
             json_data
         )
 
-    def test_invalid_mail_recepient(self):
+    def test_invalid_mail_recipients(self):
         """
-        Checking configuration data with invalid mail recepient
+        Checking configuration data with invalid mail recipients
         """
         json_data = {
             "config": {
@@ -199,7 +199,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 115200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "gmail.com"
                 ]
@@ -219,7 +219,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_valid_no_mail_part(self):
         """
-        Checking the mail recepients is optional
+        Checking the mail recipients is optional
         """
         json_data = {
             "config": {
@@ -276,7 +276,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 115200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "abc@gmail.com"
                 ]
@@ -318,7 +318,7 @@ class LauncherParserTests(unittest.TestCase):
                     "baud_rate": 115200
                 },
                 "network": "eth0",
-                "extra_recepients": [
+                "recipients": [
                     "abc@gmail.com",
                     "abc@gmail.com"
                 ]
