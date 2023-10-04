@@ -10,7 +10,10 @@ class LauncherParserTests(unittest.TestCase):
     """
     Unit tests for RPMSG test scripts
     """
-    def test_valid_tplan_part(self):
+    def test_invalid_tplan_extension(self):
+        """
+        Checking the filename extention is not expected
+        """
         filename = "./tests/tplan"
         os.system("touch {}".format(filename))
         with self.assertRaises(SystemExit):
@@ -20,7 +23,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_valid_full_launcher(self):
         """
-        Checking full configuration data
+        Checking full launcher data
         """
         json_data = {
             "config": {
@@ -87,7 +90,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_invalid_cfg_baudrate(self):
         """
-        Checking full configuration data
+        Checking configuration data with invalid console baudrate
         """
         json_data = {
             "config": {
@@ -184,7 +187,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_invalid_mail_recepient(self):
         """
-        Checking full configuration data
+        Checking configuration data with invalid mail recepient
         """
         json_data = {
             "config": {
@@ -216,7 +219,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_valid_no_mail_part(self):
         """
-        Checking full configuration data
+        Checking the mail recepients is optional
         """
         json_data = {
             "config": {
@@ -246,7 +249,9 @@ class LauncherParserTests(unittest.TestCase):
         )
 
     def test_valid_high_pdk_part(self):
-
+        """
+        Checking the high PDK example yaml
+        """
         filename = "./tests/x8_high_MED.yaml"
         with open(filename, "r") as fp:
             json_data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -257,3 +262,86 @@ class LauncherParserTests(unittest.TestCase):
             json_data
         )
 
+    def test_valid_deploy_seed_override_method(self):
+        """
+        Checking deploy with seed-override and system-user method
+        """
+        json_data = {
+            "config": {
+                "project_name": "test_project1",
+                "username": "abc",
+                "password": "def",
+                "serial_console": {
+                    "port": "abc",
+                    "baud_rate": 115200
+                },
+                "network": "eth0",
+                "extra_recepients": [
+                    "abc@gmail.com",
+                    "abc@gmail.com"
+                ]
+            },
+            "run_stage": [
+                {
+                    "deploy": {
+                        "utility": "seed_override",
+                        "method": "system-user",
+                        "timeout": 300
+                    }
+                }
+            ],
+        }
+
+        _, filename = tempfile.mkstemp(suffix=".yaml")
+
+        with open(filename, "w") as fp:
+            json.dump(json_data, fp)
+
+        launcher_obj = LauncherParser(fp.name)
+        os.remove(filename)
+        self.assertDictEqual(
+            launcher_obj.data,
+            json_data
+        )
+
+    def test_valid_deploy_seed_override_lk_method(self):
+        """
+        Checking deploy with seed-override-lk and console-conf method
+        """
+        json_data = {
+            "config": {
+                "project_name": "test_project1",
+                "username": "abc",
+                "password": "def",
+                "serial_console": {
+                    "port": "abc",
+                    "baud_rate": 115200
+                },
+                "network": "eth0",
+                "extra_recepients": [
+                    "abc@gmail.com",
+                    "abc@gmail.com"
+                ]
+            },
+            "run_stage": [
+                {
+                    "deploy": {
+                        "utility": "seed_override_lk",
+                        "method": "console-conf",
+                        "timeout": 300
+                    }
+                }
+            ],
+        }
+
+        _, filename = tempfile.mkstemp(suffix=".yaml")
+
+        with open(filename, "w") as fp:
+            json.dump(json_data, fp)
+
+        launcher_obj = LauncherParser(fp.name)
+        os.remove(filename)
+        self.assertDictEqual(
+            launcher_obj.data,
+            json_data
+        )
