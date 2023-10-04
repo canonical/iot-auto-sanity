@@ -59,7 +59,7 @@ LAUNCHER_SCHEMA = {
                                         "enum": [
                                             "uuu",
                                             "seed_override",
-                                            "read-current-power"
+                                            "seed_override_lk"
                                         ]
                                     },
                                     "method": {
