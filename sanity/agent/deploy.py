@@ -60,7 +60,7 @@ def deploy(con, method, user_init ,timeout=600):
                 return FAILED
 
             # beside seed/, also copy additional files for little-kernel
-            if syscmd('sshpass -p ' + device_pwd + ' scp -r -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" seed boot.img snaprecoverysel.bin ' + device_uname + '@' + ADDR + ':~/') != 0:
+            if syscmd('sshpass -p ' + dev_data.device_pwd + ' scp -r -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" seed boot.img snaprecoverysel.bin ' + dev_data.device_uname + '@' + ADDR + ':~/') != 0:
                 print("Upload seed file failed")
                 return FAILED
 
