@@ -26,7 +26,7 @@ LAUNCHER_SCHEMA = {
                     "required": ["port", "baud_rate"]
                 },
                 "network": {"type": "string"},
-                "extra_recepients": {
+                "recipients": {
                     "type": "array",
                     "items": {"$ref": "#/$defs/mail_format"}
                 }
