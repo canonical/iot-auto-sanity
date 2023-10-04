@@ -10,6 +10,13 @@ class LauncherParserTests(unittest.TestCase):
     """
     Unit tests for RPMSG test scripts
     """
+    def test_valid_tplan_part(self):
+        filename = "./tests/tplan"
+        os.system("touch {}".format(filename))
+        with self.assertRaises(SystemExit):
+            LauncherParser(filename)
+        os.remove(filename)
+
 
     def test_valid_full_launcher(self):
         """
@@ -240,7 +247,7 @@ class LauncherParserTests(unittest.TestCase):
 
     def test_valid_high_pdk_part(self):
 
-        filename = "/home/stanley/Desktop/Git_Repos/iot-auto-sanity/tests/x8_high_MED.yaml"
+        filename = "./tests/x8_high_MED.yaml"
         with open(filename, "r") as fp:
             json_data = yaml.load(fp, Loader=yaml.FullLoader)
 
@@ -249,3 +256,4 @@ class LauncherParserTests(unittest.TestCase):
             launcher_obj.data,
             json_data
         )
+

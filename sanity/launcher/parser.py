@@ -182,6 +182,9 @@ class LauncherParser():
                 self._data = json.load(fp)
             elif ext in [".yaml", ".yml"]:
                 self._data = yaml.load(fp, Loader=yaml.FullLoader)
+            else:
+                raise SystemExit("The tplan should has extend name in json or yaml.")
+
         self.validate_data()
 
     @property
