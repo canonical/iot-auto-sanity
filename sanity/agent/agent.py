@@ -12,14 +12,14 @@ def start(plan, con, sched=None):
     while True:
         for stage in plan:
 
-            if stage is str:
+            if isinstance(stage, str):
                 if stage == "login":
                     print(gen_head_string("normal login"))
                     login(con)
                 elif stage == "run_login":
                     print(gen_head_string("run mode login"))
                     run_login(con)
-            elif stage is dict:
+            elif isinstance(stage, dict):
                 if "initial_login" in stage.keys():
                     print(gen_head_string("init login"))
                     init_mode_login(
