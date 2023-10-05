@@ -46,7 +46,7 @@ LAUNCHER_SCHEMA = {
                 "oneOf": [
                     {
                         "type": "string",
-                        "enum": ["login", "run_login"]
+                        "enum": ["login", "run_login", "reboot"]
                     },
                     {
                         "type": "object",

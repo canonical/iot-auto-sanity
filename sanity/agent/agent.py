@@ -19,6 +19,10 @@ def start(plan, con, sched=None):
                 elif stage == "run_login":
                     print(gen_head_string("run mode login"))
                     run_login(con)
+                elif stage == "reboot":
+                    con.write_con_no_wait("sudo reboot")
+                    run_login(con)
+
             elif isinstance(stage, dict):
                 if "initial_login" in stage.keys():
                     print(gen_head_string("init login"))
