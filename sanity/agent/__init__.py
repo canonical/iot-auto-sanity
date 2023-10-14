@@ -10,7 +10,6 @@ from sanity.launcher.parser import LauncherParser
 
 
 def start_agent(cfg):
-
     lanncher_parser = LauncherParser(cfg)
     launcher_data = lanncher_parser.data
 
@@ -26,7 +25,7 @@ def start_agent(cfg):
     con = console(
         dev_data.device_uname,
         cfg_data["serial_console"]["port"],
-        cfg_data["serial_console"]["baud_rate"]
+        cfg_data["serial_console"]["baud_rate"],
     )
     dev_data.IF = cfg_data["network"]
 
@@ -44,6 +43,6 @@ def start_agent(cfg):
         print("device disconnected or multiple access on port?")
         mail.send_mail(
             FAILED,
-            (f"{dev_data.project} device disconnected "
-             "or multiple access on port?")
+            f"{dev_data.project} device disconnected "
+            "or multiple access on port?",
         )

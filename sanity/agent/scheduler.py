@@ -4,13 +4,13 @@ import time
 import threading
 from sanity.agent.style import columns
 
-class scheduler:
 
+class scheduler:
     WORK_FLAG = False
     last_line = 0
 
     def __init__(self, act):
-        task = threading.Thread(target = self.schedule_task_runner)
+        task = threading.Thread(target=self.schedule_task_runner)
         task.start()
         self.do_schedule(act)
 
@@ -23,7 +23,6 @@ class scheduler:
         global WORK_FLAG
         WORK_FLAG = True
         print("====scheduled work start====".center(columns))
-
 
     def do_schedule(self, act):
         global WORK_FLAG
@@ -47,23 +46,39 @@ class scheduler:
                     case "mon":
                         schedule.every().monday.at(act[3]).do(self.wakeup_work)
                     case "tue":
-                        schedule.every().tuesday.at(act[3]).do(self.wakeup_work)
+                        schedule.every().tuesday.at(act[3]).do(
+                            self.wakeup_work
+                        )
                     case "wed":
-                        schedule.every().wednesday.at(act[3]).do(self.wakeup_work)
+                        schedule.every().wednesday.at(act[3]).do(
+                            self.wakeup_work
+                        )
                     case "thu":
-                        schedule.every().thursday.at(act[3]).do(self.wakeup_work)
+                        schedule.every().thursday.at(act[3]).do(
+                            self.wakeup_work
+                        )
                     case "fri":
                         schedule.every().friday.at(act[3]).do(self.wakeup_work)
                     case "sat":
-                        schedule.every().saturday.at(act[3]).do(self.wakeup_work)
+                        schedule.every().saturday.at(act[3]).do(
+                            self.wakeup_work
+                        )
                     case "sun":
                         schedule.every().sunday.at(act[3]).do(self.wakeup_work)
                     case None:
-                        print("unknown day "+ act[2])
+                        print("unknown day " + act[2])
                         sys.exit()
-
 
         WORK_FLAG = False
         while WORK_FLAG == False:
-            print(("======== Current time: " + time.strftime("%Y-%m-%d  %H:%M") + "  Next job on: "  + str(schedule.next_run()) + " ========").center(columns), end="\r")
+            print(
+                (
+                    "======== Current time: "
+                    + time.strftime("%Y-%m-%d  %H:%M")
+                    + "  Next job on: "
+                    + str(schedule.next_run())
+                    + " ========"
+                ).center(columns),
+                end="\r",
+            )
             time.sleep(30)

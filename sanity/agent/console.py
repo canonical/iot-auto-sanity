@@ -4,15 +4,16 @@ import time
 from sanity.agent.cmd import syscmd
 from sanity.agent.style import columns
 
+
 class console:
     con = None
-    device_uname=""
+    device_uname = ""
 
     # record log
     RECORD = False
     LOG = ""
 
-    def __init__(self, uname, com_port = '/dev/ttyUSB0', brate=115200):
+    def __init__(self, uname, com_port="/dev/ttyUSB0", brate=115200):
         global con
         global RECORD
         global device_uname
@@ -21,15 +22,20 @@ class console:
         while True:
             try:
                 syscmd("sudo chmod 666 " + com_port)
-                con = serial.Serial(port=com_port, baudrate=brate, stopbits=serial.STOPBITS_ONE, interCharTimeout=None, timeout=5)
-                break;
+                con = serial.Serial(
+                    port=com_port,
+                    baudrate=brate,
+                    stopbits=serial.STOPBITS_ONE,
+                    interCharTimeout=None,
+                    timeout=5,
+                )
+                break
             except serial.SerialException as e:
                 print("{} retrying.....".format(e))
                 time.sleep(1)
 
-
-    #due to command will not return "xxx@ubuntu"
-    #we need to using different function to handle
+    # due to command will not return "xxx@ubuntu"
+    # we need to using different function to handle
     def write_con_no_wait(self, message=""):
         global con
         con.flushOutput()
@@ -39,7 +45,7 @@ class console:
 
     def wait_response(self):
         global device_uname
-        res =""
+        res = ""
         while True:
             mesg = self.read_con()
             if mesg.find(device_uname + "@") != -1:
@@ -72,7 +78,7 @@ class console:
         global con
 
         while True:
-            mesg = (con.readline()).decode('utf-8', errors="ignore").strip()
+            mesg = (con.readline()).decode("utf-8", errors="ignore").strip()
             if HANDLE_EMPTY == False or mesg != "":
                 break
 

@@ -7,7 +7,7 @@ def main():
     parser.add_argument(
         "--sanity-launcher",
         help="the launcher configuration for iot sanity",
-        required=True
+        required=True,
     )
     args = parser.parse_args()
 

@@ -8,10 +8,8 @@ from sanity.agent.err import *
 
 
 def start(plan, con, sched=None):
-
     while True:
         for stage in plan:
-
             if isinstance(stage, str):
                 if stage == "login":
                     print(gen_head_string("normal login"))
@@ -31,10 +29,15 @@ def start(plan, con, sched=None):
                     )
                 elif "deploy" in stage.keys():
                     print(gen_head_string("deploy procedure"))
-                    if deploy(con,
-                              stage["deploy"].get("utility"),
-                              stage["deploy"].get("method"),
-                              stage["deploy"].get("timeout", 600)) == FAILED:
+                    if (
+                        deploy(
+                            con,
+                            stage["deploy"].get("utility"),
+                            stage["deploy"].get("method"),
+                            stage["deploy"].get("timeout", 600),
+                        )
+                        == FAILED
+                    ):
                         break
                 elif "checkbox" in stage.keys():
                     print(gen_head_string("run checkbox"))
@@ -44,9 +47,8 @@ def start(plan, con, sched=None):
                         stage["checkbox"].get("launcher"),
                         stage["checkbox"].get("secure_id"),
                         stage["checkbox"].get(
-                            "submission_description",
-                            "auto sanity test"
-                        )
+                            "submission_description", "auto sanity test"
+                        ),
                     )
                 elif "eof_commands" in stage.keys():
                     print(gen_head_string("custom command start"))
