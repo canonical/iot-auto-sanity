@@ -126,10 +126,16 @@ LAUNCHER_SCHEMA = {
                 "time": {"$ref": "#/$defs/time"},
             },
             "required": ["mode"],
-            "if": {"properties": {"mode": {"enum": ["day"]}}},
-            "then": {"required": ["time"]},
-            "if": {"properties": {"mode": {"enum": ["week"]}}},
-            "then": {"required": ["time", "day"]},
+            "allOf": [
+                {
+                    "if": {"properties": {"mode": {"enum": ["day"]}}},
+                    "then": {"required": ["time"]},
+                },
+                {
+                    "if": {"properties": {"mode": {"enum": ["week"]}}},
+                    "then": {"required": ["time", "day"]},
+                },
+            ],
         },
     },
     "required": ["config", "run_stage"],
@@ -172,4 +178,4 @@ class LauncherParser:
             validate(instance=self._data, schema=LAUNCHER_SCHEMA)
             print("the JSON data is valid")
         except jsonschema.exceptions.ValidationError as err:
-            raise ValueError("the JSON data is invalid")
+            raise ValueError("the JSON data is invalid, err {}".format(err))

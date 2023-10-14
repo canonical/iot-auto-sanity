@@ -1,8 +1,6 @@
-import shutil
 import serial
 import time
 from sanity.agent.cmd import syscmd
-from sanity.agent.style import columns
 
 
 class console:
@@ -79,7 +77,7 @@ class console:
 
         while True:
             mesg = (con.readline()).decode("utf-8", errors="ignore").strip()
-            if HANDLE_EMPTY == False or mesg != "":
+            if HANDLE_EMPTY is False or mesg != "":
                 break
 
         if RECORD:

@@ -2,7 +2,7 @@ import time
 import ipaddress
 from sanity.agent.mail import mail
 from sanity.agent.cmd import syscmd
-from sanity.agent.err import *
+from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.data import dev_data
 
 

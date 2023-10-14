@@ -1,10 +1,13 @@
-import time, os, re, glob
-from wrapt_timeout_decorator import *
-from sanity.agent.net import *
+import time
+import os
+import re
+import glob
+from wrapt_timeout_decorator import timeout
+from sanity.agent.net import get_ip, check_net_connection
 from sanity.agent.mail import mail
 from sanity.agent.cmd import syscmd
 from sanity.agent.style import columns
-from sanity.agent.err import *
+from sanity.agent.err import FAILED
 from sanity.agent.data import dev_data
 
 
@@ -68,7 +71,8 @@ def deploy(con, method, user_init, timeout=600):
                 "cd seed/ && ls -lA | awk -F':[0-9]* ' '/:/{print $2}' | xargs"
                 " -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
             )
-            # We don't wait for prompt due to system could possible reboot immediately without prompt
+            # We don't wait for prompt due to system could
+            # possible reboot immediately without prompt
             con.write_con_no_wait(
                 "sudo snap reboot --install "
                 + os.path.relpath(
@@ -124,7 +128,8 @@ def deploy(con, method, user_init, timeout=600):
                 "sudo cp snaprecoverysel.bin"
                 " /dev/disk/by-partlabel/snaprecoveryselbak && cd ~/"
             )
-            # We don't wait for prompt due to system could possible reboot immediately without prompt
+            # We don't wait for prompt due to system could possible reboot
+            # immediately without prompt
             con.write_con_no_wait(
                 "sudo snap reboot --install "
                 + os.path.relpath(
@@ -187,7 +192,7 @@ def login(con):
                 'sudo snap set system refresh.hold="$(date --date=tomorrow'
                 ' +%Y-%m-%dT%H:%M:%S%:z)"'
             )
-            if chpass == True:
+            if chpass is True:
                 con.write_con(
                     "sudo echo "
                     + dev_data.device_uname
@@ -219,7 +224,8 @@ def run_login(con):
                 print("Unknowen state")
 
 
-# This function is for login after installitation, run mode would include cloud-init before we can login.
+# This function is for login after installitation,
+# run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
 def __init_mode_login(con, userinit=CLOUD_INIT):
@@ -262,7 +268,10 @@ def init_mode_login(con, user_init, timeout=600):
         __init_mode_login(con, user_init, dec_timeout=timeout)
     except Exception as e:
         con.record(False)
-        print("Initial Device timeout: install mode or run mode timeout")
+        print(
+            "Initial Device timeout: install mode or run mode timeout error"
+            " code {}".format(e)
+        )
         mail.send_mail(
             FAILED,
             dev_data.project

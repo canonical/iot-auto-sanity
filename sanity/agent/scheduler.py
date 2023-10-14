@@ -70,7 +70,7 @@ class scheduler:
                         sys.exit()
 
         WORK_FLAG = False
-        while WORK_FLAG == False:
+        while WORK_FLAG is False:
             print(
                 (
                     "======== Current time: "

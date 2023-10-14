@@ -2,9 +2,9 @@ import time
 from datetime import datetime
 from sanity.agent.style import gen_head_string
 from sanity.agent.checkbox import run_checkbox
-from sanity.agent.deploy import *
+from sanity.agent.deploy import login, run_login, init_mode_login, deploy
 from sanity.agent.cmd import syscmd
-from sanity.agent.err import *
+from sanity.agent.err import FAILED
 
 
 def start(plan, con, sched=None):

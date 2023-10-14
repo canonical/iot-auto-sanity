@@ -5,7 +5,7 @@ from sanity.agent.mail import mail
 from sanity.agent.console import console
 from sanity.agent.scheduler import scheduler
 from sanity.agent.data import dev_data
-from sanity.agent.err import *
+from sanity.agent.err import FAILED
 from sanity.launcher.parser import LauncherParser
 
 
@@ -40,7 +40,10 @@ def start_agent(cfg):
     try:
         agent.start(launcher_data.get("run_stage"), con, sched)
     except serial.SerialException as e:
-        print("device disconnected or multiple access on port?")
+        print(
+            "device disconnected or multiple access on port?"
+            " error code {}".format(e)
+        )
         mail.send_mail(
             FAILED,
             f"{dev_data.project} device disconnected "
