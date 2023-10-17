@@ -73,11 +73,10 @@ class scheduler:
         while WORK_FLAG is False:
             print(
                 (
-                    "======== Current time: "
-                    + time.strftime("%Y-%m-%d  %H:%M")
-                    + "  Next job on: "
-                    + str(schedule.next_run())
-                    + " ========"
+                    "====== Current time: {} Next job on: {} ======".format(
+                        time.strftime("%Y-%m-%d  %H:%M"),
+                        str(schedule.next_run()),
+                    )
                 ).center(columns),
                 end="\r",
             )

@@ -57,7 +57,7 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                 mail.send_mail(
                     FAILED,
                     f"{dev_data.project} auto sanity was failed, "
-                    "checkbox report is missing. - mailT",
+                    "checkbox report is missing. {mailT}",
                 )
                 print("auto sanity is failed")
 

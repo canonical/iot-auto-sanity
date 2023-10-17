@@ -30,8 +30,10 @@ def deploy(con, method, user_init, timeout=600):
                     if syscmd("sudo uuu uc.lst") != 0:
                         mail.send_mail(
                             FAILED,
-                            dev_data.project
-                            + " auto sanity was failed, deploy failed.",
+                            (
+                                f"{dev_data.project} auto sanity was failed, "
+                                "deploy failed."
+                            ),
                         )
                         return FAILED
                     con.write_con_no_wait("\x03")  # ctrl+c
@@ -46,16 +48,18 @@ def deploy(con, method, user_init, timeout=600):
             if check_net_connection(ADDR) == FAILED:
                 return FAILED
 
+            scp_cmd = (
+                'scp -r -o "UserKnownHostsFile=/dev/null" '
+                '-o "StrictHostKeyChecking=no"'
+            )
             if (
                 syscmd(
-                    "sshpass -p "
-                    + dev_data.device_pwd
-                    + ' scp -r -o "UserKnownHostsFile=/dev/null" -o'
-                    ' "StrictHostKeyChecking=no" seed '
-                    + dev_data.device_uname
-                    + "@"
-                    + ADDR
-                    + ":~/"
+                    "sshpass -p {} {} seed {}@{}:~/".format(
+                        dev_data.device_pwd,
+                        scp_cmd,
+                        dev_data.device_uname,
+                        ADDR,
+                    )
                 )
                 != 0
             ):
@@ -64,19 +68,23 @@ def deploy(con, method, user_init, timeout=600):
 
             con.write_con("cd ~/")
             con.write_con(
-                "cd /run/mnt/ubuntu-seed && sudo ls -lA | awk -F':[0-9]* '"
-                " '/:/{print $2}' | xargs -i sudo rm -fr {} && cd ~/"
+                "cd /run/mnt/ubuntu-seed && sudo ls -lA | "
+                "awk -F':[0-9]* ' '/:/{print $2}' |"
+                "xargs -i sudo rm -fr {} && cd ~/"
             )
             con.write_con(
-                "cd seed/ && ls -lA | awk -F':[0-9]* ' '/:/{print $2}' | xargs"
-                " -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
+                "cd seed/ && ls -lA | "
+                "awk -F':[0-9]* ' '/:/{print $2}' | "
+                "xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
             )
             # We don't wait for prompt due to system could
             # possible reboot immediately without prompt
             con.write_con_no_wait(
-                "sudo snap reboot --install "
-                + os.path.relpath(
-                    str(glob.glob("seed/systems/[0-9]*")[0]), "seed/systems"
+                "sudo snap reboot --install {}".format(
+                    os.path.relpath(
+                        str(glob.glob("seed/systems/[0-9]*")[0]),
+                        "seed/systems",
+                    )
                 )
             )
             con.write_con_no_wait("sudo reboot")
@@ -91,17 +99,20 @@ def deploy(con, method, user_init, timeout=600):
                 return FAILED
 
             # beside seed/, also copy additional files for little-kernel
+
+            scp_cmd = (
+                'scp -r -o "UserKnownHostsFile=/dev/null" '
+                '-o "StrictHostKeyChecking=no"'
+            )
             if (
                 syscmd(
-                    "sshpass -p "
-                    + dev_data.device_pwd
-                    + ' scp -r -o "UserKnownHostsFile=/dev/null" -o'
-                    ' "StrictHostKeyChecking=no" seed boot.img'
-                    " snaprecoverysel.bin "
-                    + dev_data.device_uname
-                    + "@"
-                    + ADDR
-                    + ":~/"
+                    "sshpass -p {} {} seed boot.img snaprecoverysel.bin "
+                    "{}@{}:~/".format(
+                        dev_data.device_pwd,
+                        scp_cmd,
+                        dev_data.device_uname,
+                        ADDR,
+                    )
                 )
                 != 0
             ):
@@ -110,12 +121,14 @@ def deploy(con, method, user_init, timeout=600):
 
             con.write_con("cd ~/")
             con.write_con(
-                "cd /run/mnt/ubuntu-seed && sudo ls -lA | awk -F':[0-9]* '"
-                " '/:/{print $2}' | xargs -i sudo rm -fr {} && cd ~/"
+                "cd /run/mnt/ubuntu-seed && sudo ls -lA | "
+                "awk -F':[0-9]* ' '/:/{print $2}' | "
+                "xargs -i sudo rm -fr {} && cd ~/"
             )
             con.write_con(
-                "cd seed/ && ls -lA | awk -F':[0-9]* ' '/:/{print $2}' | xargs"
-                " -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
+                "cd seed/ && ls -lA | "
+                "awk -F':[0-9]* ' '/:/{print $2}' | "
+                "xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
             )
             con.write_con(
                 "sudo cp boot.img /dev/disk/by-partlabel/boot-ra && cd ~/"
@@ -131,9 +144,11 @@ def deploy(con, method, user_init, timeout=600):
             # We don't wait for prompt due to system could possible reboot
             # immediately without prompt
             con.write_con_no_wait(
-                "sudo snap reboot --install "
-                + os.path.relpath(
-                    str(glob.glob("seed/systems/[0-9]*")[0]), "seed/systems"
+                "sudo snap reboot --install {}".format(
+                    os.path.relpath(
+                        str(glob.glob("seed/systems/[0-9]*")[0]),
+                        "seed/systems",
+                    )
                 )
             )
             con.write_con_no_wait("sudo reboot")
@@ -155,13 +170,11 @@ def wait_init_device(con):
         if changes.find("Done") != -1:
             print(
                 ("Initialize device: connect to store: Done.").center(columns),
-                end="\r",
             )
             break
 
         print(
             ("Initialize device: connect to store: Doing...").center(columns),
-            end="\r",
         )
         time.sleep(5)
 
@@ -194,11 +207,9 @@ def login(con):
             )
             if chpass is True:
                 con.write_con(
-                    "sudo echo "
-                    + dev_data.device_uname
-                    + ":"
-                    + dev_data.device_pwd
-                    + " | sudo chpasswd"
+                    "sudo echo {}:{} | sudo chpasswd".format(
+                        dev_data.device_uname, dev_data.device_pwd
+                    )
                 )
             return
 
@@ -274,9 +285,8 @@ def init_mode_login(con, user_init, timeout=600):
         )
         mail.send_mail(
             FAILED,
-            dev_data.project
-            + " auto sanity was failed. Initial Device timeout: install mode"
-            " or run mode timeout",
+            f"{dev_data.project} auto sanity was failed."
+            "Initial Device timeout: install mode or run mode timeout",
             "log.txt",
         )
         return FAILED
@@ -290,8 +300,7 @@ def init_mode_login(con, user_init, timeout=600):
         print("Initial Device timeout: connect to store timeout")
         mail.send_mail(
             FAILED,
-            dev_data.project
-            + " auto sanity was failed. Initial Device timeout: connect to"
-            " store timeout",
+            f"{dev_data.project} auto sanity was failed."
+            "Initial Device timeout: connect to store timeout",
         )
         return FAILED

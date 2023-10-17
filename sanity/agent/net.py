@@ -13,10 +13,8 @@ def get_ip(con):
         retry += 1
         try:
             ADDR = con.write_con(
-                "ip address show "
-                + dev_data.IF
-                + " | grep \"inet \" | head -n 1 | cut -d ' ' -f 6 | cut -d"
-                ' "/" -f 1'
+                f'ip address show {dev_data.IF} | grep "inet " | '
+                "head -n 1 | cut -d ' ' -f 6 | cut -d  \"/\" -f 1"
             )
             ADDR = ADDR.splitlines()[-1]
             ipaddress.ip_address(ADDR)
@@ -25,8 +23,8 @@ def get_ip(con):
             if retry > 15:
                 mail.send_mail(
                     FAILED,
-                    dev_data.project
-                    + " auto sanity was failed, target device DHCP failed.",
+                    f"{dev_data.project} auto sanity was failed,"
+                    "target device DHCP failed.",
                 )
                 return FAILED
 
@@ -42,8 +40,8 @@ def check_net_connection(ADDR):
         if retry > 10:
             mail.send_mail(
                 FAILED,
-                dev_data.project
-                + " auto sanity was failed, target device connection timeout.",
+                f"{dev_data.project} auto sanity was failed,"
+                "target device connection timeout.",
             )
             return FAILED
 

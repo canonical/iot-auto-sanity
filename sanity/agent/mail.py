@@ -17,8 +17,8 @@ class mail:
         msg = MIMEMultipart()
         msg["From"] = mail.fromaddr
         msg["To"] = ", ".join(mail.recipients)
-        msg["Subject"] = (
-            dev_data.project + " Auto Sanity was " + mail.MESSG[status] + "!!"
+        msg["Subject"] = "{} Auto Sanity was {} !!".format(
+            dev_data.project, mail.MESSG[status]
         )
         body = "This is auto sanity bot notification\n" + message
         msg.attach(MIMEText(body, "plain"))
