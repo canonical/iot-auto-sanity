@@ -14,10 +14,7 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
     )
 
     ADDR = get_ip(con)
-    if ADDR == FAILED:
-        return FAILED
-
-    if check_net_connection(ADDR) == FAILED:
+    if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
         return FAILED
 
     syscmd(

@@ -42,10 +42,7 @@ def deploy(con, method, user_init, timeout=600):
         case "seed_override":
             login(con)
             ADDR = get_ip(con)
-            if ADDR == FAILED:
-                return FAILED
-
-            if check_net_connection(ADDR) == FAILED:
+            if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
                 return FAILED
 
             scp_cmd = (
@@ -92,10 +89,7 @@ def deploy(con, method, user_init, timeout=600):
         case "seed_override_lk":
             login(con)
             ADDR = get_ip(con)
-            if ADDR == FAILED:
-                return FAILED
-
-            if check_net_connection(ADDR) == FAILED:
+            if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
                 return FAILED
 
             # beside seed/, also copy additional files for little-kernel
