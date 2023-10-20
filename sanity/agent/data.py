@@ -3,3 +3,4 @@ class dev_data:
     IF = "eth0"
     device_uname = None
     device_pwd = None
+    hostname = "ubuntu"

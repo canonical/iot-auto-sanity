@@ -30,6 +30,7 @@ LAUNCHER_SCHEMA = {
                     "type": "array",
                     "items": {"$ref": "#/$defs/mail_format"},
                 },
+                "hostname": {"type": "string"},
             },
             "required": [
                 "project_name",
