@@ -178,7 +178,7 @@ def login(con):
     chpass = False
     while True:
         mesg = con.read_con(False)
-        if mesg.find("ubuntu login:") != -1:
+        if mesg.find(f"{dev_data.hostname} login:") != -1:
             con.write_con_no_wait(dev_data.device_uname)
 
         elif mesg.find("Password:") != -1:

@@ -32,6 +32,9 @@ def start_agent(cfg):
     if cfg_data.get("recipients"):
         mail.recipients.extend(cfg_data.get("recipients"))
 
+    if cfg_data.get("hostname"):
+        dev_data.hostname = cfg_data.get("hostname")
+
     if launcher_data.get("period"):
         sched = scheduler(launcher_data.get("period"))
     else:

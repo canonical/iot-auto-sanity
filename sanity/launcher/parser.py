@@ -30,6 +30,7 @@ LAUNCHER_SCHEMA = {
                     "type": "array",
                     "items": {"$ref": "#/$defs/mail_format"},
                 },
+                "hostname": {"type": "string"},
             },
             "required": [
                 "project_name",
@@ -148,7 +149,7 @@ LAUNCHER_SCHEMA = {
         "mode": {"type": "string", "enum": ["hour", "day", "week", "test"]},
         "mail_format": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9]+@[a-zA-Z0-9.]+$",
+            "pattern": "^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+$",
         },
     },
 }
