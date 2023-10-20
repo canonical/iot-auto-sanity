@@ -149,7 +149,7 @@ LAUNCHER_SCHEMA = {
         "mode": {"type": "string", "enum": ["hour", "day", "week", "test"]},
         "mail_format": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9]+@[a-zA-Z0-9.]+$",
+            "pattern": "^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+$",
         },
     },
 }
