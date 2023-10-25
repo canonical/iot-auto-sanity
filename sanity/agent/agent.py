@@ -25,8 +25,18 @@ def start(plan, con, sched=None):
                 if "initial_login" in stage.keys():
                     print(gen_head_string("init login"))
                     init_mode_login(
-                        con, stage["initial_login"].get("timeout", 600)
+                        con,
+                        stage["initial_login"].get("method"),
+                        stage["initial_login"].get("timeout", 600),
                     )
+                elif "reboot_install" in stage.keys():
+                    con.write_con_no_wait("sudo snap reboot --install")
+                    init_mode_login(
+                        con,
+                        stage["reboot_install"].get("method"),
+                        stage["reboot_install"].get("timeout", 600),
+                    )
+
                 elif "deploy" in stage.keys():
                     print(gen_head_string("deploy procedure"))
                     if (
