@@ -1,8 +1,8 @@
-Install the auto-sanity tool
+# Install the auto-sanity tool
     1. pip3 install -U pip
     2. pip3 install .
 
-Program your own tplan yaml
+# Program your own tplan yaml
     example:
     
     ##############################
@@ -36,5 +36,5 @@ Program your own tplan yaml
     
     ###############################
     
-Run test
+# Run test
     auto-sanity --sanity-launcher <your tplan>
