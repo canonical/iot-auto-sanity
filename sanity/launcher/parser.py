@@ -63,14 +63,7 @@ LAUNCHER_SCHEMA = {
                                             "seed_override_lk",
                                         ],
                                     },
-                                    "method": {
-                                        "type": "string",
-                                        "enum": [
-                                            "cloud-init",
-                                            "console-conf",
-                                            "system-user",
-                                        ],
-                                    },
+                                    "method": {"$ref": "#/$defs/method"},
                                     "timeout": {
                                         "type": "integer",
                                         "default": 600,
@@ -100,11 +93,24 @@ LAUNCHER_SCHEMA = {
                             "initial_login": {
                                 "type": "object",
                                 "properties": {
+                                    "method": {"$ref": "#/$defs/method"},
                                     "timeout": {
                                         "type": "integer",
                                         "default": 600,
-                                    }
+                                    },
                                 },
+                                "required": ["method"],
+                            },
+                            "reboot_install": {
+                                "type": "object",
+                                "properties": {
+                                    "method": {"$ref": "#/$defs/method"},
+                                    "timeout": {
+                                        "type": "integer",
+                                        "default": 600,
+                                    },
+                                },
+                                "required": ["method"],
                             },
                             "sys_commands": {
                                 "type": "array",
@@ -150,6 +156,14 @@ LAUNCHER_SCHEMA = {
         "mail_format": {
             "type": "string",
             "pattern": "^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+$",
+        },
+        "method": {
+            "type": "string",
+            "enum": [
+                "cloud-init",
+                "console-conf",
+                "system-user",
+            ],
         },
     },
 }

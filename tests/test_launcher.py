@@ -58,7 +58,16 @@ class LauncherParserTests(unittest.TestCase):
                 },
                 "login",
                 {
-                    "initial_login": {"timeout": 300}
+                    "initial_login": {
+                        "method": "cloud-init",
+                        "timeout": 300
+                    }
+                },
+                {
+                    "reboot_install": {
+                        "method": "cloud-init",
+                        "timeout": 300
+                    }
                 },
                 {"sys_commands": [
                     "ls",
