@@ -118,7 +118,14 @@ LAUNCHER_SCHEMA = {
                             },
                             "eof_commands": {
                                 "type": "array",
-                                "items": {"type": "string"},
+                                "minItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cmd": {"type": "string"},
+                                        "expected": {"type": "string"},
+                                    },
+                                },
                             },
                         },
                     },
