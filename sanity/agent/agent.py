@@ -63,7 +63,12 @@ def start(plan, con, sched=None):
                 elif "eof_commands" in stage.keys():
                     print(gen_head_string("custom command start"))
                     for cmd in stage["eof_commands"]:
-                        con.write_con(cmd)
+                        result = con.write_con(cmd.get("cmd"))
+                        expected = cmd.get("expected", None)
+                        if expected and expected not in result:
+                            print("commands result unmatch expected")
+                            break
+
                     print(gen_head_string("custom command end"))
                 elif "sys_commands" in stage.keys():
                     print(gen_head_string("sys comand start"))

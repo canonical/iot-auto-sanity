@@ -6,10 +6,12 @@ import tempfile
 from sanity.launcher.parser import LauncherParser
 from unittest.mock import patch
 
+
 class LauncherParserTests(unittest.TestCase):
     """
     Unit tests for RPMSG test scripts
     """
+
     def test_invalid_tplan_extension(self):
         """
         Checking the filename extention is not expected
@@ -20,7 +22,6 @@ class LauncherParserTests(unittest.TestCase):
             LauncherParser(filename)
         os.remove(filename)
 
-
     def test_valid_full_launcher(self):
         """
         Checking full launcher data
@@ -30,22 +31,16 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 115200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "abc@gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "abc@gmail.com"],
             },
             "run_stage": [
                 {
                     "deploy": {
                         "utility": "uuu",
                         "method": "cloud-init",
-                        "timeout": 300
+                        "timeout": 300,
                     }
                 },
                 {
@@ -53,35 +48,20 @@ class LauncherParserTests(unittest.TestCase):
                         "snap_name": "checkbox-iiotg",
                         "launcher": "test-checkbox-launcher",
                         "secure_id": "dfadsfasf123244YVubNe6",
-                        "submission_description": "auto sanity test"
+                        "submission_description": "auto sanity test",
                     }
                 },
                 "login",
+                {"initial_login": {"method": "cloud-init", "timeout": 300}},
+                {"reboot_install": {"method": "cloud-init", "timeout": 300}},
+                {"sys_commands": ["ls", "help"]},
                 {
-                    "initial_login": {
-                        "method": "cloud-init",
-                        "timeout": 300
-                    }
+                    "eof_commands": [
+                        {"cmd": "datetime", "expected": "20231011"},
+                    ]
                 },
-                {
-                    "reboot_install": {
-                        "method": "cloud-init",
-                        "timeout": 300
-                    }
-                },
-                {"sys_commands": [
-                    "ls",
-                    "help"
-                ]},
-                {"eof_commands": [
-                    "datetime"
-                ]}
             ],
-            "period": {
-                "mode": "week",
-                "day": "fri",
-                "time": "23:00"
-            }
+            "period": {"mode": "week", "day": "fri", "time": "23:00"},
         }
 
         _, filename = tempfile.mkstemp(suffix=".yaml")
@@ -92,10 +72,7 @@ class LauncherParserTests(unittest.TestCase):
         launcher_obj.abd = "help"
         os.remove(filename)
 
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
 
     def test_invalid_cfg_baudrate(self):
         """
@@ -106,22 +83,16 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 5200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 5200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "abc@gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "abc@gmail.com"],
             },
             "run_stage": [
                 {
                     "deploy": {
                         "utility": "uuu",
                         "method": "cloud-init",
-                        "timeout": 300
+                        "timeout": 300,
                     }
                 },
                 {
@@ -129,26 +100,19 @@ class LauncherParserTests(unittest.TestCase):
                         "snap_name": "checkbox-iiotg",
                         "launcher": "test-checkbox-launcher",
                         "secure_id": "dfadsfasf123244YVubNe6",
-                        "submission_description": "auto sanity test"
+                        "submission_description": "auto sanity test",
                     }
                 },
                 "login",
+                {"initial_login": {"timeout": 300}},
+                {"sys_commands": ["ls", "help"]},
                 {
-                    "initial_login": {"timeout": 300}
+                    "eof_commands": [
+                        {"cmd": "datetime", "expected": "20231011"},
+                    ]
                 },
-                {"sys_commands": [
-                    "ls",
-                    "help"
-                ]},
-                {"eof_commands": [
-                    "datetime"
-                ]}
             ],
-            "period": {
-                "mode": "week",
-                "day": "fri",
-                "time": "23:00"
-            }
+            "period": {"mode": "week", "day": "fri", "time": "23:00"},
         }
 
         _, filename = tempfile.mkstemp(suffix=".yaml")
@@ -159,7 +123,6 @@ class LauncherParserTests(unittest.TestCase):
             LauncherParser(fp.name)
         os.remove(filename)
 
-
     def test_valid_full_cfg_part(self):
         """
         Checking full configuration data
@@ -169,15 +132,9 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 115200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "abc@gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "abc@gmail.com"],
             },
             "run_stage": ["run_login"],
         }
@@ -189,10 +146,7 @@ class LauncherParserTests(unittest.TestCase):
 
         launcher_obj = LauncherParser(fp.name)
         os.remove(filename)
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
 
     def test_invalid_mail_recipients(self):
         """
@@ -203,15 +157,9 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 115200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "gmail.com"],
             },
             "run_stage": ["run_login"],
         }
@@ -235,13 +183,10 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
-                "network": "eth0"
+                "serial_console": {"port": "abc", "baud_rate": 115200},
+                "network": "eth0",
             },
-            "run_stage": ["run_login"]
+            "run_stage": ["run_login"],
         }
 
         _, filename = tempfile.mkstemp(suffix=".yaml")
@@ -252,10 +197,7 @@ class LauncherParserTests(unittest.TestCase):
         launcher_obj = LauncherParser(fp.name)
         os.remove(filename)
 
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
 
     def test_valid_high_pdk_part(self):
         """
@@ -266,10 +208,7 @@ class LauncherParserTests(unittest.TestCase):
             json_data = yaml.load(fp, Loader=yaml.FullLoader)
 
         launcher_obj = LauncherParser(filename)
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
 
     def test_valid_deploy_seed_override_method(self):
         """
@@ -280,22 +219,16 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 115200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "abc@gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "abc@gmail.com"],
             },
             "run_stage": [
                 {
                     "deploy": {
                         "utility": "seed_override",
                         "method": "system-user",
-                        "timeout": 300
+                        "timeout": 300,
                     }
                 }
             ],
@@ -308,10 +241,7 @@ class LauncherParserTests(unittest.TestCase):
 
         launcher_obj = LauncherParser(fp.name)
         os.remove(filename)
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
 
     def test_valid_deploy_seed_override_lk_method(self):
         """
@@ -322,22 +252,16 @@ class LauncherParserTests(unittest.TestCase):
                 "project_name": "test_project1",
                 "username": "abc",
                 "password": "def",
-                "serial_console": {
-                    "port": "abc",
-                    "baud_rate": 115200
-                },
+                "serial_console": {"port": "abc", "baud_rate": 115200},
                 "network": "eth0",
-                "recipients": [
-                    "abc@gmail.com",
-                    "abc@gmail.com"
-                ]
+                "recipients": ["abc@gmail.com", "abc@gmail.com"],
             },
             "run_stage": [
                 {
                     "deploy": {
                         "utility": "seed_override_lk",
                         "method": "console-conf",
-                        "timeout": 300
+                        "timeout": 300,
                     }
                 }
             ],
@@ -350,7 +274,4 @@ class LauncherParserTests(unittest.TestCase):
 
         launcher_obj = LauncherParser(fp.name)
         os.remove(filename)
-        self.assertDictEqual(
-            launcher_obj.data,
-            json_data
-        )
+        self.assertDictEqual(launcher_obj.data, json_data)
