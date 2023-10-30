@@ -16,8 +16,8 @@ run_stage:
         utility: uuu
         method: system-user
     - eof_commands:
-        - sudo snap install --devmode checkbox-shiner --edge
-        - sudo snap refresh checkbox20 --beta
+      - cmd: sudo snap install --devmode checkbox-shiner --edge
+      - cmd: sudo snap refresh checkbox20 --beta
     - checkbox:
         snap_name: checkbox-shiner
         launcher: runner-launcher
