@@ -68,6 +68,7 @@ LAUNCHER_SCHEMA = {
                                         "type": "integer",
                                         "default": 600,
                                     },
+                                    "update_boot_assets": {"type": "boolean"},
                                 },
                                 "required": ["utility", "method"],
                             },

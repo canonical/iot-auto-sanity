@@ -2,6 +2,8 @@ import time
 import os
 import re
 import glob
+import fnmatch
+import yaml
 from wrapt_timeout_decorator import timeout
 from sanity.agent.net import get_ip, check_net_connection
 from sanity.agent.mail import mail
@@ -19,7 +21,139 @@ SYSTEM = "system-user"
 LOGIN = "login"
 
 
-def deploy(con, method, user_init, timeout=600):
+def boot_assets_update(ADDR):
+    ssh_option = (
+        '-o "UserKnownHostsFile=/dev/null" ' '-o "StrictHostKeyChecking=no"'
+    )
+
+    gadget = None
+    for file in glob.glob("seed/snaps/*.snap"):
+        if fnmatch.fnmatch(file, "*gadget*"):
+            gadget = file
+            break
+    if gadget is None:
+        print("Gadget snap not found, return")
+        return
+
+    cmd = "cp {} .".format(gadget)
+    syscmd(cmd)
+    cmd = "unsquashfs -d temp {}".format(os.path.basename(gadget))
+    syscmd(cmd)
+
+    file = "temp/meta/gadget.yaml"
+    with open(file, "r") as fp:
+        data = yaml.load(fp, Loader=yaml.FullLoader)
+
+    for _, vol in data["volumes"].items():
+        for part in vol["structure"]:
+            if "name" in part:
+                if "content" in part:
+                    for con in part["content"]:
+                        if "image" in con:
+                            to_image = con["image"]
+                            image = os.path.basename(to_image)
+                            offset = (
+                                0 if "offset" not in part else part["offset"]
+                            )
+                            print(
+                                "image = {} offset = {}".format(image, offset)
+                            )
+                            syscmd(
+                                "sshpass -p {} scp -r {} temp/{} "
+                                "{}@{}:~/".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    to_image,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                )
+                            )
+                            syscmd(
+                                "sshpass -p {} ssh {} {}@{} set -x; sudo dd "
+                                "if={} of=/dev/disk/by-partlabel/{} seek={} "
+                                "bs=1".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                    image,
+                                    part["name"],
+                                    offset,
+                                )
+                            )
+                        elif "source" in con and "target" in con:
+                            source = con["source"]
+                            target = con["target"]
+                            if "$kernel" in source or "boot.sel" in source:
+                                continue
+
+                            syscmd(
+                                "sshpass -p {} scp -r {} temp/{} "
+                                "{}@{}:~/".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    source,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                )
+                            )
+                            syscmd(
+                                'sshpass -p {} ssh {} {}@{} "set -x; sudo cp '
+                                r"-avr {} \$(lsblk | grep \$(ls -l "
+                                "/dev/disk/by-partlabel/{} | rev | "
+                                "cut -d ' ' -f 1 | cut -d '/' -f 1 | rev) | "
+                                "rev | cut -d ' ' -f 1 | rev)/{}\"".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                    source,
+                                    part["name"],
+                                    target,
+                                )
+                            )
+            else:
+                for temppart in vol["structure"]:
+                    if "name" in temppart:
+                        name = temppart["name"]
+                        break
+                if "content" in part:
+                    for con in part["content"]:
+                        to_image = con["image"]
+                        image = os.path.basename(to_image)
+                        offset = part["offset"]
+                        print("image = {} offset = {}".format(image, offset))
+                        syscmd(
+                            "sshpass -p {} scp -r {} temp/{} {}@{}:~/".format(
+                                dev_data.device_pwd,
+                                ssh_option,
+                                to_image,
+                                dev_data.device_uname,
+                                ADDR,
+                            )
+                        )
+                        syscmd(
+                            'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
+                            r"if={} of=/dev/\$(ls -l "
+                            "/dev/disk/by-partlabel/{} | rev | "
+                            "cut -d ' ' -f 1 | cut -d '/' -f 1 | "
+                            "rev | sed 's/p[0-9]\\+$//') "
+                            'seek={} bs=1"'.format(
+                                dev_data.device_pwd,
+                                ssh_option,
+                                dev_data.device_uname,
+                                ADDR,
+                                image,
+                                name,
+                                offset,
+                            )
+                        )
+
+    cmd = "rm -fr temp {}".format(os.path.basename(gadget))
+    syscmd(cmd)
+
+
+def deploy(con, method, user_init, update_boot_assets, timeout=600):
     match method:
         case "uuu":
             while True:
@@ -44,6 +178,8 @@ def deploy(con, method, user_init, timeout=600):
             ADDR = get_ip(con)
             if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
                 return FAILED
+            if update_boot_assets:
+                boot_assets_update(ADDR)
 
             scp_cmd = (
                 'scp -r -o "UserKnownHostsFile=/dev/null" '
@@ -91,6 +227,8 @@ def deploy(con, method, user_init, timeout=600):
             ADDR = get_ip(con)
             if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
                 return FAILED
+            if update_boot_assets:
+                boot_assets_update(ADDR)
 
             # beside seed/, also copy additional files for little-kernel
 
