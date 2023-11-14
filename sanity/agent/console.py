@@ -1,5 +1,6 @@
 import serial
 import time
+import os
 from sanity.agent.cmd import syscmd
 
 
@@ -17,6 +18,12 @@ class console:
         global device_uname
         RECORD = False
         device_uname = uname
+
+        try:
+            os.stat(com_port)
+        except OSError:
+            raise SystemExit("{} not exist".format(com_port))
+
         while True:
             try:
                 syscmd("sudo chmod 666 " + com_port)
@@ -30,6 +37,7 @@ class console:
                 break
             except serial.SerialException as e:
                 print("{} retrying.....".format(e))
+                syscmd("fuser -k " + com_port)
                 time.sleep(1)
 
     # due to command will not return "xxx@ubuntu"
