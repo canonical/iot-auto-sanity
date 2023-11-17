@@ -69,9 +69,9 @@ def boot_assets_update(ADDR):
                                 )
                             )
                             syscmd(
-                                "sshpass -p {} ssh {} {}@{} set -x; sudo dd "
+                                'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
                                 "if={} of=/dev/disk/by-partlabel/{} seek={} "
-                                "bs=1".format(
+                                'bs=1"'.format(
                                     dev_data.device_pwd,
                                     ssh_option,
                                     dev_data.device_uname,
