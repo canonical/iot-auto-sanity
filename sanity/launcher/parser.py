@@ -58,6 +58,7 @@ LAUNCHER_SCHEMA = {
                                     "utility": {
                                         "type": "string",
                                         "enum": [
+                                            "utp_com",
                                             "uuu",
                                             "uuu_bootloader",
                                             "seed_override",

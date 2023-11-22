@@ -181,6 +181,61 @@ def boot_assets_update(ADDR):
 
 def deploy(con, method, user_init, update_boot_assets, timeout=600):
     match method:
+        case "utp_com":
+            # This method is currently used for i.MX6 devices that does not
+            # use uuu to flash image
+            # ToDo: Currently we only use this method for Tillamook project,
+            # if there will be other projects need to use this method, we need
+            # to make it more generic
+            image_tarball = [
+                f
+                for f in os.listdir("./")
+                if re.search(r".*\.(gz|xz|tar|tar\.gz|tar\.xz)$", f)
+            ][0]
+            image_name = image_tarball.split(".")[0] + ".img"
+            syscmd(
+                "set -x; "
+                "if snap list imx6-img-flash-tool; then "
+                "  sudo snap refresh imx6-img-flash-tool --devmode --edge; "
+                "else "
+                "  sudo snap install imx6-img-flash-tool --devmode --edge; "
+                "fi"
+            )
+            syscmd(f"set -x; tar xf {image_tarball}")
+            flash_script_dir = ""
+            for dirpath, dirnames, filenames in os.walk("."):
+                filename = [
+                    f for f in filenames if re.search(r"flash.+\.sh$", f)
+                ]
+                if len(filename):
+                    flash_script_dir = dirpath
+            # Need to do the following before start flashing image
+            # 1. Use dyper to press the button on device
+            # 2. Use type-c mux to switch to flash cable
+            # 3. power on the device
+            if (
+                syscmd(
+                    f"set -x; cd {flash_script_dir} && "
+                    f"sudo imx6-img-flash-tool.flash ../{image_name} "
+                    "../u-boot-500.imx"
+                )
+                != 0
+            ):
+                mail.send_mail(
+                    FAILED,
+                    (
+                        f"{dev_data.project} auto sanity was failed, "
+                        "deploy failed."
+                    ),
+                )
+                return FAILED
+
+            # Need to do the following after image flashed
+            # 1. Use dyper to stop pressing the button on device
+            # 2. Use type-c mux to switch to USB pendrive for
+            #    system-user assertion
+            # 3. power cycle the device
+            return
         case "uuu":
             if syscmd("sudo uuu uc.lst") != 0:
                 mail.send_mail(
