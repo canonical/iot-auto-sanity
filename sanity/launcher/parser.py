@@ -59,6 +59,7 @@ LAUNCHER_SCHEMA = {
                                         "type": "string",
                                         "enum": [
                                             "uuu",
+                                            "uuu_bootloader",
                                             "seed_override",
                                             "seed_override_lk",
                                         ],
