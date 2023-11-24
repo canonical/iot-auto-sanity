@@ -2,7 +2,6 @@ import time
 import os
 import re
 import glob
-import fnmatch
 import yaml
 from wrapt_timeout_decorator import timeout
 from sanity.agent.net import get_ip, check_net_connection
@@ -26,14 +25,41 @@ def boot_assets_update(ADDR):
         '-o "UserKnownHostsFile=/dev/null" ' '-o "StrictHostKeyChecking=no"'
     )
 
-    gadget = None
-    for file in glob.glob("seed/snaps/*.snap"):
-        if fnmatch.fnmatch(file, "*gadget*"):
-            gadget = file
-            break
-    if gadget is None:
-        print("Gadget snap not found, return")
+    # Find the model assertion
+    models = glob.glob("seed/systems/*/model")
+    if len(models) == 0:
+        print("No model assertion is found")
         return
+
+    # Read the model assertion
+    with open(models[0], "r") as file:
+        content = file.read()
+
+    # Remove the signature part after the empty line,
+    # suppose 20 lines sufficient
+    content = re.sub(r"^$(.*\r?\n){0,20}", "", content, flags=re.MULTILINE)
+
+    # Parse YAML content
+    model_yaml = yaml.safe_load(content)
+
+    # Extract gadget names where the type is "gadget"
+    gadgets = []
+    snaps = model_yaml["snaps"]
+    for snap in snaps:
+        if snap["type"] == "gadget":
+            gadgets.append(snap["name"])
+
+    # There should be exact one gadget snap defined
+    if len(gadgets) != 1:
+        print("Number of gadget snap is not ONE")
+        return
+
+    gadget = None
+    gadget_files = glob.glob("seed/snaps/{}_*.snap".format(gadgets[0]))
+    if len(gadget_files) == 0:
+        print("There is no gadget snap")
+        return
+    gadget = gadget_files[0]
 
     cmd = "cp {} .".format(gadget)
     syscmd(cmd)
