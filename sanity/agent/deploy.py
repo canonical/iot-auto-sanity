@@ -182,6 +182,18 @@ def boot_assets_update(ADDR):
 def deploy(con, method, user_init, update_boot_assets, timeout=600):
     match method:
         case "uuu":
+            if syscmd("sudo uuu uc.lst") != 0:
+                mail.send_mail(
+                    FAILED,
+                    (
+                        f"{dev_data.project} auto sanity was failed, "
+                        "deploy failed."
+                    ),
+                )
+                return FAILED
+            return
+
+        case "uuu_bootloader":
             while True:
                 mesg = con.read_con()
                 if mesg.find("Fastboot:") != -1:
@@ -199,6 +211,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                     con.write_con_no_wait("\x03")  # ctrl+c
                     con.write_con_no_wait("run bootcmd")
                     break
+
         case "seed_override":
             login(con)
             ADDR = get_ip(con)
