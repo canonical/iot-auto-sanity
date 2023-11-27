@@ -1,6 +1,5 @@
 import os
 import time
-from sanity.agent.mail import mail
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.net import get_ip, check_net_connection
@@ -14,8 +13,19 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
     )
 
     ADDR = get_ip(con)
-    if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
-        return FAILED
+    if ADDR == FAILED:
+        return {
+            "code": FAILED,
+            "mesg": f"{dev_data.project} auto sanity was failed,"
+            f"target device DHCP failed.",
+        }
+
+    if check_net_connection(ADDR) == FAILED:
+        return {
+            "code": FAILED,
+            "mesg": f"{dev_data.project} auto sanity was failed,"
+            f"target device connection timeout.",
+        }
 
     syscmd(
         f"sshpass -p  {dev_data.device_pwd} {SCP_CMD} {runner_cfg} "
@@ -43,19 +53,19 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                 syscmd(f"mv report.tar.xz {report_name}")
                 print(upload_command)
                 syscmd(upload_command)
-                mail.send_mail(
-                    SUCCESS,
-                    f"{dev_data.project} run {runner_cfg}"
-                    f" auto sanity was finished on {mailT}",
-                    report_name,
-                )
                 print("auto sanity is finished")
+                return {
+                    "code": SUCCESS,
+                    "mesg": f"{dev_data.project} run {runner_cfg},"
+                    f" auto sanity was finished on {mailT}",
+                    "log": report_name,
+                }
+
             else:
-                mail.send_mail(
-                    FAILED,
-                    f"{dev_data.project} auto sanity was failed, "
-                    "checkbox report is missing. {mailT}",
-                )
                 print("auto sanity is failed")
 
-            return
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f" checkbox report is missing. {mailT}",
+                }

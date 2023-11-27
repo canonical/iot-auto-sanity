@@ -5,10 +5,9 @@ import glob
 import yaml
 from wrapt_timeout_decorator import timeout
 from sanity.agent.net import get_ip, check_net_connection
-from sanity.agent.mail import mail
 from sanity.agent.cmd import syscmd
 from sanity.agent.style import columns
-from sanity.agent.err import FAILED
+from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.data import dev_data
 
 
@@ -183,15 +182,13 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
     match method:
         case "uuu":
             if syscmd("sudo uuu uc.lst") != 0:
-                mail.send_mail(
-                    FAILED,
-                    (
-                        f"{dev_data.project} auto sanity was failed, "
-                        "deploy failed."
-                    ),
-                )
-                return FAILED
-            return
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f" deploy failed.",
+                }
+
+            return {"code": SUCCESS}
 
         case "uuu_bootloader":
             while True:
@@ -200,14 +197,12 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                     con.write_con_no_wait()
                     con.write_con_no_wait("fastboot usb 0")
                     if syscmd("sudo uuu uc.lst") != 0:
-                        mail.send_mail(
-                            FAILED,
-                            (
-                                f"{dev_data.project} auto sanity was failed, "
-                                "deploy failed."
-                            ),
-                        )
-                        return FAILED
+                        return {
+                            "code": FAILED,
+                            "mesg": f"{dev_data.project}"
+                            f" auto sanity was failed, deploy failed.",
+                        }
+
                     con.write_con_no_wait("\x03")  # ctrl+c
                     con.write_con_no_wait("run bootcmd")
                     break
@@ -215,8 +210,20 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
         case "seed_override":
             login(con)
             ADDR = get_ip(con)
-            if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
-                return FAILED
+            if ADDR == FAILED:
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"target device DHCP failed.",
+                }
+
+            if check_net_connection(ADDR) == FAILED:
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"target device connection timeout.",
+                }
+
             if update_boot_assets:
                 boot_assets_update(ADDR)
 
@@ -236,7 +243,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 != 0
             ):
                 print("Upload seed file failed")
-                return FAILED
+                return {"code": FAILED}
 
             con.write_con("cd ~/")
             con.write_con(
@@ -264,8 +271,20 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
         case "seed_override_lk":
             login(con)
             ADDR = get_ip(con)
-            if ADDR == FAILED or check_net_connection(ADDR) == FAILED:
-                return FAILED
+            if ADDR == FAILED:
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"target device DHCP failed.",
+                }
+
+            if check_net_connection(ADDR) == FAILED:
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"target device connection timeout.",
+                }
+
             if update_boot_assets:
                 boot_assets_update(ADDR)
 
@@ -288,7 +307,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 != 0
             ):
                 print("Upload seed file failed")
-                return FAILED
+                return {"code": FAILED}
 
             con.write_con("cd ~/")
             con.write_con(
@@ -325,7 +344,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             con.write_con_no_wait("sudo reboot")
 
         case _:
-            return FAILED
+            return {"code": FAILED}
 
     return init_mode_login(con, user_init, timeout)
 
@@ -454,13 +473,12 @@ def init_mode_login(con, user_init, timeout=600):
             "Initial Device timeout: install mode or run mode timeout error"
             " code {}".format(e)
         )
-        mail.send_mail(
-            FAILED,
-            f"{dev_data.project} auto sanity was failed."
-            "Initial Device timeout: install mode or run mode timeout",
-            "log.txt",
-        )
-        return FAILED
+        return {
+            "code": FAILED,
+            "mesg": f"{dev_data.project} auto sanity was failed."
+            " Initial Device timeout: install mode or run mode timeout",
+            "log": "log.txt",
+        }
 
     con.record(False)
 
@@ -469,9 +487,9 @@ def init_mode_login(con, user_init, timeout=600):
     except Exception as e:
         print(e)
         print("Initial Device timeout: connect to store timeout")
-        mail.send_mail(
-            FAILED,
-            f"{dev_data.project} auto sanity was failed."
-            "Initial Device timeout: connect to store timeout",
-        )
-        return FAILED
+        return {
+            "code": FAILED,
+            "mesg": f"{dev_data.project} auto sanity was failed."
+            " Initial Device timeout: connect to store timeout",
+        }
+    return {"code": SUCCESS}
