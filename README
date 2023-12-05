@@ -22,7 +22,7 @@ Program your own tplan yaml
                 - second command to control PC
     
             - deploy:
-                utility: deploy method, we currently support [uuu, seed_override, seed_override_lk]
+                utility: deploy method, we currently support [utp_com, uuu, seed_override, seed_override_lk]
                 method: create account method, we currently support [cloud-init, system-user]
             - eof_commands:
                 - first command to target device
