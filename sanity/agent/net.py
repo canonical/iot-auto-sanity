@@ -1,6 +1,5 @@
 import time
 import ipaddress
-from sanity.agent.mail import mail
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.data import dev_data
@@ -21,11 +20,6 @@ def get_ip(con):
             return ADDR
         except Exception:
             if retry > 15:
-                mail.send_mail(
-                    FAILED,
-                    f"{dev_data.project} auto sanity was failed,"
-                    "target device DHCP failed.",
-                )
                 return FAILED
 
         time.sleep(1)
@@ -38,11 +32,6 @@ def check_net_connection(ADDR):
     while status != 0:
         retry += 1
         if retry > 10:
-            mail.send_mail(
-                FAILED,
-                f"{dev_data.project} auto sanity was failed,"
-                "target device connection timeout.",
-            )
             return FAILED
 
         status = syscmd("ping -c 1 " + ADDR)

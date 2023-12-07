@@ -1,10 +1,33 @@
 import time
+from sanity.agent.mail import mail
 from datetime import datetime
 from sanity.agent.style import gen_head_string
 from sanity.agent.checkbox import run_checkbox
 from sanity.agent.deploy import login, run_login, init_mode_login, deploy
 from sanity.agent.cmd import syscmd
-from sanity.agent.err import FAILED
+from sanity.agent.err import FAILED, SUCCESS
+
+
+def notify(status):
+    code = status["code"]
+    content = ""
+    log_file = ""
+
+    if "mesg" in status:
+        content = status["mesg"]
+
+    if "log" in status:
+        log_file = status["log"]
+
+    if code == SUCCESS:
+        mail.send_mail(SUCCESS)
+
+    elif code == FAILED:
+        mail.send_mail(
+            FAILED,
+            content,
+            log_file,
+        )
 
 
 def start(plan, con, sched=None):
@@ -24,11 +47,16 @@ def start(plan, con, sched=None):
             elif isinstance(stage, dict):
                 if "initial_login" in stage.keys():
                     print(gen_head_string("init login"))
-                    init_mode_login(
+                    status = init_mode_login(
                         con,
                         stage["initial_login"].get("method"),
                         stage["initial_login"].get("timeout", 600),
                     )
+
+                    if status["code"] == FAILED:
+                        notify(status)
+                        break
+
                 elif "reboot_install" in stage.keys():
                     con.write_con_no_wait("sudo snap reboot --install")
                     init_mode_login(
@@ -39,20 +67,20 @@ def start(plan, con, sched=None):
 
                 elif "deploy" in stage.keys():
                     print(gen_head_string("deploy procedure"))
-                    if (
-                        deploy(
-                            con,
-                            stage["deploy"].get("utility"),
-                            stage["deploy"].get("method"),
-                            stage["deploy"].get("update_boot_assets", False),
-                            stage["deploy"].get("timeout", 600),
-                        )
-                        == FAILED
-                    ):
+                    status = deploy(
+                        con,
+                        stage["deploy"].get("utility"),
+                        stage["deploy"].get("method"),
+                        stage["deploy"].get("update_boot_assets", False),
+                        stage["deploy"].get("timeout", 600),
+                    )
+
+                    if status["code"] == FAILED:
+                        notify(status)
                         break
                 elif "checkbox" in stage.keys():
                     print(gen_head_string("run checkbox"))
-                    run_checkbox(
+                    status = run_checkbox(
                         con,
                         stage["checkbox"].get("snap_name"),
                         stage["checkbox"].get("launcher"),
@@ -61,6 +89,7 @@ def start(plan, con, sched=None):
                             "submission_description", "auto sanity test"
                         ),
                     )
+                    notify(status)
                 elif "eof_commands" in stage.keys():
                     print(gen_head_string("custom command start"))
                     for cmd in stage["eof_commands"]:
