@@ -220,14 +220,11 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 )
                 != 0
             ):
-                mail.send_mail(
-                    FAILED,
-                    (
-                        f"{dev_data.project} auto sanity was failed, "
-                        "deploy failed."
-                    ),
-                )
-                return FAILED
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project}"
+                    f" auto sanity was failed, deploy failed.",
+                }
 
             # Need to do the following after image flashed
             # 1. Use dyper to stop pressing the button on device
