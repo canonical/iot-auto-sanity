@@ -5,7 +5,7 @@ from sanity.agent.style import gen_head_string
 from sanity.agent.checkbox import run_checkbox
 from sanity.agent.deploy import login, run_login, init_mode_login, deploy
 from sanity.agent.cmd import syscmd
-from sanity.agent.err import FAILED, SUCCESS
+from sanity.agent.err import FAILED
 
 
 def notify(status):
@@ -19,15 +19,11 @@ def notify(status):
     if "log" in status:
         log_file = status["log"]
 
-    if code == SUCCESS:
-        mail.send_mail(SUCCESS)
-
-    elif code == FAILED:
-        mail.send_mail(
-            FAILED,
-            content,
-            log_file,
-        )
+    mail.send_mail(
+        code,
+        content,
+        log_file,
+    )
 
 
 def start(plan, con, sched=None):
