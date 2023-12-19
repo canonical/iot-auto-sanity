@@ -231,7 +231,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             # 2. Use type-c mux to switch to USB pendrive for
             #    system-user assertion
             # 3. power cycle the device
-            return
+            return {"code": SUCCESS}
+
         case "uuu":
             if syscmd("sudo uuu uc.lst") != 0:
                 return {
