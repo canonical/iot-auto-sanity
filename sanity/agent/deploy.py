@@ -406,22 +406,6 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
 # This part is for login process
 #
 # =============================================
-@timeout(dec_timeout=300)
-def wait_init_device(con):
-    while True:
-        changes = con.write_con('snap changes | grep "Initialize device"')
-        if changes.find("Done") != -1:
-            print(
-                ("Initialize device: connect to store: Done.").center(columns),
-            )
-            break
-
-        print(
-            ("Initialize device: connect to store: Doing...").center(columns),
-        )
-        time.sleep(5)
-
-
 def login(con):
     TPASS = "insecure"
     chpass = False
@@ -478,14 +462,18 @@ def run_login(con):
                 print("Unknowen state")
 
 
-# This function is for login after installitation,
+# This function is for login after installation,
 # run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
 def __init_mode_login(con, userinit=CLOUD_INIT):
+    global init_mode_login_message
+
     state = INSTALL_MODE
     print("===user init:" + userinit + " ====")
 
+    init_mode_login_message = "install mode or run mode timeout"
+    con.record(True)
     while True:
         mesg = con.read_con()
         match state:
@@ -511,38 +499,41 @@ def __init_mode_login(con, userinit=CLOUD_INIT):
                     state = LOGIN
             case "login":
                 login(con)
-                return
+                break
             case _:
                 print("Unknowen state")
 
+    init_mode_login_message = "connect to store timeout"
+    con.record(False)
+    while True:
+        changes = con.write_con('snap changes | grep "Initialize device"')
+        if changes.find("Done") != -1:
+            print(
+                ("Initialize device: connect to store: Done.").center(columns),
+            )
+            break
+
+        print(
+            ("Initialize device: connect to store: Doing...").center(columns),
+        )
+        time.sleep(5)
+
 
 def init_mode_login(con, user_init, timeout=600):
-    con.record(True)
+    global init_mode_login_message
+
     try:
         __init_mode_login(con, user_init, dec_timeout=timeout)
     except Exception as e:
         con.record(False)
         print(
-            "Initial Device timeout: install mode or run mode timeout error"
+            f"Initial Device timeout: {init_mode_login_message}"
             " code {}".format(e)
         )
         return {
             "code": FAILED,
             "mesg": f"{dev_data.project} auto sanity was failed."
-            " Initial Device timeout: install mode or run mode timeout",
+            f" Initial Device timeout: {init_mode_login_message}",
             "log": "log.txt",
-        }
-
-    con.record(False)
-
-    try:
-        wait_init_device(con)
-    except Exception as e:
-        print(e)
-        print("Initial Device timeout: connect to store timeout")
-        return {
-            "code": FAILED,
-            "mesg": f"{dev_data.project} auto sanity was failed."
-            " Initial Device timeout: connect to store timeout",
         }
     return {"code": SUCCESS}
