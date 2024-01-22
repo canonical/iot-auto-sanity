@@ -399,7 +399,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
         case _:
             return {"code": FAILED}
 
-    return init_mode_login(con, user_init, timeout)
+    return boot_login(con, user_init, True, timeout)
 
 
 # ==============================================
@@ -444,58 +444,42 @@ def login(con):
             con.write_con_no_wait()
 
 
-# This function is for noramal reboot, normal not include cloud-init part
-# So we check if "Ubuntu Core 20 on" show up before we login.
-def run_login(con):
-    state = RUN_MODE
-
-    while True:
-        mesg = con.read_con()
-        match state:
-            case "run":
-                if mesg.find("Ubuntu Core 20 on") != -1:
-                    state = LOGIN
-            case "login":
-                login(con)
-                return
-            case _:
-                print("Unknowen state")
-
-
 # This function is for login after installation,
 # run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
 @timeout(dec_timeout=600)
-def __init_mode_login(con, userinit=CLOUD_INIT):
+def __boot_login(con, userinit, is_init_mode):
     global init_mode_login_message
-
     state = INSTALL_MODE
-    print("===user init:" + userinit + " ====")
 
-    init_mode_login_message = "install mode or run mode timeout"
     con.record(True)
     while True:
         mesg = con.read_con()
         match state:
             case "install":
-                if mesg.find("snapd_recovery_mode=run") != -1:
-                    print("======jump to run mode====")
-                    state = RUN_MODE
+                if re.search("snapd_recovery_mode=run", mesg):
+                    if is_init_mode is False:
+                        state = RUN_MODE
+                    else:
+                        init_mode_login_message = (
+                            "install mode or run mode timeout"
+                        )
+                        state = userinit
+
             case "run":
-                print("=====run mode====")
-                state = userinit
+                if re.search("Ubuntu Core 2[024] on", mesg):
+                    state = LOGIN
 
             case "cloud-init":
-                if (
-                    mesg.find("Cloud-init") != -1
-                    and mesg.find("finished") != -1
+                if re.search("Cloud-init", mesg) and re.search(
+                    "finished", mesg
                 ):
                     state = LOGIN
 
             case "console-conf":
                 print("console-conf TBD")
             case "system-user":
-                if re.search("Ubuntu Core 2[0-9] on", mesg):
+                if re.search("Ubuntu Core 2[024] on", mesg):
                     state = LOGIN
             case "login":
                 login(con)
@@ -503,8 +487,12 @@ def __init_mode_login(con, userinit=CLOUD_INIT):
             case _:
                 print("Unknowen state")
 
-    init_mode_login_message = "connect to store timeout"
     con.record(False)
+
+    if is_init_mode is False:
+        return
+
+    init_mode_login_message = "connect to store timeout"
     while True:
         changes = con.write_con('snap changes | grep "Initialize device"')
         if changes.find("Done") != -1:
@@ -519,11 +507,11 @@ def __init_mode_login(con, userinit=CLOUD_INIT):
         time.sleep(5)
 
 
-def init_mode_login(con, user_init, timeout=600):
+def boot_login(con, user_init=None, is_init_mode=False, timeout=600):
     global init_mode_login_message
 
     try:
-        __init_mode_login(con, user_init, dec_timeout=timeout)
+        __boot_login(con, user_init, is_init_mode, dec_timeout=timeout)
     except Exception as e:
         con.record(False)
         print(

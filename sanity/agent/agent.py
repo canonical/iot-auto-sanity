@@ -3,7 +3,7 @@ from sanity.agent.mail import mail
 from datetime import datetime
 from sanity.agent.style import gen_head_string
 from sanity.agent.checkbox import run_checkbox
-from sanity.agent.deploy import login, run_login, init_mode_login, deploy
+from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED
 
@@ -35,17 +35,18 @@ def start(plan, con, sched=None):
                     login(con)
                 elif stage == "run_login":
                     print(gen_head_string("run mode login"))
-                    run_login(con)
+                    boot_login(con)
                 elif stage == "reboot":
                     con.write_con_no_wait("sudo reboot")
-                    run_login(con)
+                    boot_login(con)
 
             elif isinstance(stage, dict):
                 if "initial_login" in stage.keys():
                     print(gen_head_string("init login"))
-                    status = init_mode_login(
+                    status = boot_login(
                         con,
                         stage["initial_login"].get("method"),
+                        True,
                         stage["initial_login"].get("timeout", 600),
                     )
 
@@ -55,9 +56,10 @@ def start(plan, con, sched=None):
 
                 elif "reboot_install" in stage.keys():
                     con.write_con_no_wait("sudo snap reboot --install")
-                    init_mode_login(
+                    boot_login(
                         con,
                         stage["reboot_install"].get("method"),
+                        True,
                         stage["reboot_install"].get("timeout", 600),
                     )
 
