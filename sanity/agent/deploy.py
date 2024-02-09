@@ -83,16 +83,22 @@ def boot_assets_update(ADDR):
                             print(
                                 "image = {} offset = {}".format(image, offset)
                             )
-                            syscmd(
-                                "sshpass -p {} scp -r {} temp/{} "
-                                "{}@{}:~/".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    to_image,
-                                    dev_data.device_uname,
-                                    ADDR,
+                            if (
+                                syscmd(
+                                    "sshpass -p {} scp -r {} temp/{} "
+                                    "{}@{}:~/".format(
+                                        dev_data.device_pwd,
+                                        ssh_option,
+                                        to_image,
+                                        dev_data.device_uname,
+                                        ADDR,
+                                    ),
+                                    timeout=600,
                                 )
-                            )
+                                != 0
+                            ):
+                                print("Upload boot assets failed")
+                                return
                             syscmd(
                                 'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
                                 "if={} of=/dev/disk/by-partlabel/{} seek={} "
@@ -111,17 +117,22 @@ def boot_assets_update(ADDR):
                             target = con["target"]
                             if "$kernel" in source or "boot.sel" in source:
                                 continue
-
-                            syscmd(
-                                "sshpass -p {} scp -r {} temp/{} "
-                                "{}@{}:~/".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    source,
-                                    dev_data.device_uname,
-                                    ADDR,
+                            if (
+                                syscmd(
+                                    "sshpass -p {} scp -r {} temp/{} "
+                                    "{}@{}:~/".format(
+                                        dev_data.device_pwd,
+                                        ssh_option,
+                                        source,
+                                        dev_data.device_uname,
+                                        ADDR,
+                                    ),
+                                    timeout=600,
                                 )
-                            )
+                                != 0
+                            ):
+                                print("Upload boot assets failed")
+                                return
                             syscmd(
                                 'sshpass -p {} ssh {} {}@{} "set -x; sudo cp '
                                 r"-avr {} \$(lsblk | grep \$(ls -l "
@@ -148,15 +159,22 @@ def boot_assets_update(ADDR):
                         image = os.path.basename(to_image)
                         offset = part["offset"]
                         print("image = {} offset = {}".format(image, offset))
-                        syscmd(
-                            "sshpass -p {} scp -r {} temp/{} {}@{}:~/".format(
-                                dev_data.device_pwd,
-                                ssh_option,
-                                to_image,
-                                dev_data.device_uname,
-                                ADDR,
+                        if (
+                            syscmd(
+                                "sshpass -p {} scp -r {} "
+                                "temp/{} {}@{}:~/".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    to_image,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                ),
+                                timeout=600,
                             )
-                        )
+                            != 0
+                        ):
+                            print("Upload boot assets failed")
+                            return
                         syscmd(
                             'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
                             r"if={} of=/dev/\$(ls -l "
@@ -291,7 +309,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                         scp_cmd,
                         dev_data.device_uname,
                         ADDR,
-                    )
+                    ),
+                    timeout=600,
                 )
                 != 0
             ):
@@ -355,7 +374,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                         scp_cmd,
                         dev_data.device_uname,
                         ADDR,
-                    )
+                    ),
+                    timeout=600,
                 )
                 != 0
             ):
