@@ -3,6 +3,7 @@ import os
 import re
 import glob
 import yaml
+import subprocess as subprocess
 from wrapt_timeout_decorator import timeout
 from sanity.agent.net import get_ip, check_net_connection
 from sanity.agent.cmd import syscmd
@@ -83,16 +84,34 @@ def boot_assets_update(ADDR):
                             print(
                                 "image = {} offset = {}".format(image, offset)
                             )
-                            syscmd(
-                                "sshpass -p {} scp -r {} temp/{} "
-                                "{}@{}:~/".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    to_image,
-                                    dev_data.device_uname,
-                                    ADDR,
+
+                            try:
+                                subprocess.run(
+                                    "sshpass -p {} scp -r {} temp/{} "
+                                    "{}@{}:~/".format(
+                                        dev_data.device_pwd,
+                                        ssh_option,
+                                        to_image,
+                                        dev_data.device_uname,
+                                        ADDR,
+                                    ),
+                                    shell=True,
+                                    check=True,
+                                    timeout=600,
                                 )
-                            )
+                            except subprocess.CalledProcessError:
+                                print(
+                                    "Upload boot assets failed, "
+                                    "skip update boot asset"
+                                )
+                                return
+                            except subprocess.TimeoutExpired:
+                                print(
+                                    "Upload boot assets timeout, "
+                                    "skip update boot asset"
+                                )
+                                return
+
                             syscmd(
                                 'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
                                 "if={} of=/dev/disk/by-partlabel/{} seek={} "
@@ -112,16 +131,33 @@ def boot_assets_update(ADDR):
                             if "$kernel" in source or "boot.sel" in source:
                                 continue
 
-                            syscmd(
-                                "sshpass -p {} scp -r {} temp/{} "
-                                "{}@{}:~/".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    source,
-                                    dev_data.device_uname,
-                                    ADDR,
+                            try:
+                                subprocess.run(
+                                    "sshpass -p {} scp -r {} temp/{} "
+                                    "{}@{}:~/".format(
+                                        dev_data.device_pwd,
+                                        ssh_option,
+                                        source,
+                                        dev_data.device_uname,
+                                        ADDR,
+                                    ),
+                                    shell=True,
+                                    check=True,
+                                    timeout=600,
                                 )
-                            )
+                            except subprocess.CalledProcessError:
+                                print(
+                                    "Upload boot assets failed, "
+                                    "skip update boot asset"
+                                )
+                                return
+                            except subprocess.TimeoutExpired:
+                                print(
+                                    "Upload boot assets timeout, "
+                                    "skip update boot asset"
+                                )
+                                return
+
                             syscmd(
                                 'sshpass -p {} ssh {} {}@{} "set -x; sudo cp '
                                 r"-avr {} \$(lsblk | grep \$(ls -l "
@@ -148,15 +184,34 @@ def boot_assets_update(ADDR):
                         image = os.path.basename(to_image)
                         offset = part["offset"]
                         print("image = {} offset = {}".format(image, offset))
-                        syscmd(
-                            "sshpass -p {} scp -r {} temp/{} {}@{}:~/".format(
-                                dev_data.device_pwd,
-                                ssh_option,
-                                to_image,
-                                dev_data.device_uname,
-                                ADDR,
+
+                        try:
+                            subprocess.run(
+                                "sshpass -p {} scp -r {} temp/{} "
+                                "{}@{}:~/".format(
+                                    dev_data.device_pwd,
+                                    ssh_option,
+                                    to_image,
+                                    dev_data.device_uname,
+                                    ADDR,
+                                ),
+                                shell=True,
+                                check=True,
+                                timeout=600,
                             )
-                        )
+                        except subprocess.CalledProcessError:
+                            print(
+                                "Upload boot assets failed, "
+                                "skip update boot asset"
+                            )
+                            return
+                        except subprocess.TimeoutExpired:
+                            print(
+                                "Upload boot assets timeout, "
+                                "skip update boot asset"
+                            )
+                            return
+
                         syscmd(
                             'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
                             r"if={} of=/dev/\$(ls -l "
@@ -284,19 +339,33 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 'scp -r -o "UserKnownHostsFile=/dev/null" '
                 '-o "StrictHostKeyChecking=no"'
             )
-            if (
-                syscmd(
+
+            try:
+                subprocess.run(
                     "sshpass -p {} {} seed {}@{}:~/".format(
                         dev_data.device_pwd,
                         scp_cmd,
                         dev_data.device_uname,
                         ADDR,
-                    )
+                    ),
+                    shell=True,
+                    check=True,
+                    timeout=600,
                 )
-                != 0
-            ):
-                print("Upload seed file failed")
-                return {"code": FAILED}
+            except subprocess.CalledProcessError:
+                print("Upload seed file command failed")
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"Upload seed file command failed",
+                }
+            except subprocess.TimeoutExpired:
+                print("Upload seed file timeout")
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"Upload seed file timeout",
+                }
 
             con.write_con("cd ~/")
             con.write_con(
@@ -347,20 +416,34 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 'scp -r -o "UserKnownHostsFile=/dev/null" '
                 '-o "StrictHostKeyChecking=no"'
             )
-            if (
-                syscmd(
+
+            try:
+                subprocess.run(
                     "sshpass -p {} {} seed boot.img snaprecoverysel.bin "
                     "{}@{}:~/".format(
                         dev_data.device_pwd,
                         scp_cmd,
                         dev_data.device_uname,
                         ADDR,
-                    )
+                    ),
+                    shell=True,
+                    check=True,
+                    timeout=600,
                 )
-                != 0
-            ):
-                print("Upload seed file failed")
-                return {"code": FAILED}
+            except subprocess.CalledProcessError:
+                print("Upload seed file command failed")
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"Upload seed file command failed",
+                }
+            except subprocess.TimeoutExpired:
+                print("Upload seed file timeout")
+                return {
+                    "code": FAILED,
+                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    f"Upload seed file timeout",
+                }
 
             con.write_con("cd ~/")
             con.write_con(
