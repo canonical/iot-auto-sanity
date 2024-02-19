@@ -1,4 +1,5 @@
 import smtplib
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -9,13 +10,23 @@ from sanity.agent.data import dev_data
 class mail:
     # mail
     MESSG = ["finished", "failed"]
-    PASSWD = "ectgbttmpfsbxxrg"
-    fromaddr = "an.wu@canonical.com"
-    recipients = ["oem-sanity@lists.canonical.com", "an.wu@canonical.com"]
+    PASSWD = os.getenv("MAIL_TOKEN")
+    SENDER = os.getenv("MAIL_SENDER")
+    recipients = []
 
     def send_mail(status="failed", message="None", filename=""):
+        if (
+            mail.PASSWD is None
+            or mail.SENDER is None
+            or len(mail.recipients) == 0
+        ):
+            print(
+                "Can not send notification due to mail sender has not been set"
+            )
+            return
+
         msg = MIMEMultipart()
-        msg["From"] = mail.fromaddr
+        msg["From"] = mail.SENDER
         msg["To"] = ", ".join(mail.recipients)
         msg["Subject"] = "{} Auto Sanity was {} !!".format(
             dev_data.project, mail.MESSG[status]
@@ -36,7 +47,7 @@ class mail:
 
         s = smtplib.SMTP("smtp.gmail.com", 587)
         s.starttls()
-        s.login(mail.fromaddr, mail.PASSWD)
+        s.login(mail.SENDER, mail.PASSWD)
         text = msg.as_string()
-        s.sendmail(mail.fromaddr, mail.recipients, text)
+        s.sendmail(mail.SENDER, mail.recipients, text)
         s.quit()
