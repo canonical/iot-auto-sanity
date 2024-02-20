@@ -47,7 +47,11 @@ class mail:
 
         s = smtplib.SMTP("smtp.gmail.com", 587)
         s.starttls()
-        s.login(mail.SENDER, mail.PASSWD)
+        try:
+            s.login(mail.SENDER, mail.PASSWD)
+        except smtplib.SMTPAuthenticationError:
+            print("Mail account login failed")
+            return
         text = msg.as_string()
         s.sendmail(mail.SENDER, mail.recipients, text)
         s.quit()
