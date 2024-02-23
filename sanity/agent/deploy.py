@@ -17,6 +17,7 @@ CLOUD_INIT = "cloud-init"
 CONSOLE_CONF = "console-conf"
 SYSTEM = "system-user"
 LOGIN = "login"
+init_mode_login_message = ""
 
 
 def boot_assets_update(ADDR):
