@@ -1,31 +1,37 @@
-import schedule
+"""individal timer for tasks"""
+
 import sys
 import time
 import threading
+import schedule
 from sanity.agent.style import columns
 
 
-class scheduler:
-    WORK_FLAG = False
+class Scheduler:
+    """a timer method"""
+
+    work_flag = False
     last_line = 0
 
     def __init__(self, act):
+        """Init thread to counting"""
         task = threading.Thread(target=self.schedule_task_runner)
         task.start()
         self.do_schedule(act)
 
     def schedule_task_runner(self):
+        """tracking timer"""
         while True:
             schedule.run_pending()
             time.sleep(10)
 
     def wakeup_work(self):
-        global WORK_FLAG
-        WORK_FLAG = True
+        """start timer"""
+        self.work_flag = True
         print("====scheduled work start====".center(columns))
 
     def do_schedule(self, act):
-        global WORK_FLAG
+        """timer setup"""
 
         if len(act) < 2:
             print("Wrong PERIODIC format")
@@ -69,14 +75,12 @@ class scheduler:
                         print("unknown day " + act[2])
                         sys.exit()
 
-        WORK_FLAG = False
-        while WORK_FLAG is False:
+        self.work_flag = False
+        while self.work_flag is False:
             print(
                 (
-                    "====== Current time: {} Next job on: {} ======".format(
-                        time.strftime("%Y-%m-%d  %H:%M"),
-                        str(schedule.next_run()),
-                    )
+                    f'====== Current time: {time.strftime("%Y-%m-%d  %H:%M")} '
+                    f"Next job on: {str(schedule.next_run())} ======"
                 ).center(columns),
                 end="\r",
             )

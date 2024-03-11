@@ -1,33 +1,34 @@
-import serial
+"""This module provides consolve relvent methods"""
+
 import time
 import os
+import serial
 from sanity.agent.cmd import syscmd
 
 
-class console:
+class Console:
+    """handle send and receive through console to target"""
+
     con = None
     device_uname = ""
 
     # record log
-    RECORD = False
-    LOG = ""
+    record_log = False
+    log = ""
 
     def __init__(self, uname, com_port="/dev/ttyUSB0", brate=115200):
-        global con
-        global RECORD
-        global device_uname
-        RECORD = False
-        device_uname = uname
+        self.record_log = False
+        self.device_uname = uname
 
         try:
             os.stat(com_port)
-        except OSError:
-            raise SystemExit("{} not exist".format(com_port))
+        except OSError as e:
+            raise SystemExit(f"{com_port} not exist") from e
 
         while True:
             try:
                 syscmd("sudo chmod 666 " + com_port)
-                con = serial.Serial(
+                self.con = serial.Serial(
                     port=com_port,
                     baudrate=brate,
                     stopbits=serial.STOPBITS_ONE,
@@ -36,60 +37,63 @@ class console:
                 )
                 break
             except serial.SerialException as e:
-                print("{} retrying.....".format(e))
+                print(f"{e} retrying.....")
                 syscmd("fuser -k " + com_port)
                 time.sleep(1)
+
+    def close(self):
+        """close port"""
+        self.con.close()
 
     # due to command will not return "xxx@ubuntu"
     # we need to using different function to handle
     def write_con_no_wait(self, message=""):
-        global con
-        con.flushOutput()
+        """send command to console and do not wait for certain word pattern"""
+        self.con.flushOutput()
         time.sleep(0.1)
-        con.write(bytes((message + "\n").encode()))
+        self.con.write(bytes((message + "\n").encode()))
         time.sleep(1)
 
     def wait_response(self):
-        global device_uname
+        """waiting for certain pattern after send command
+        then we know the command is finished"""
         res = ""
         while True:
             mesg = self.read_con()
-            if mesg.find(device_uname + "@") != -1:
+            if mesg.find(self.device_uname + "@") != -1:
                 return res
             res = res + "\n" + mesg
 
     def write_con(self, message=""):
-        global con
-        con.flushOutput()
-        con.flushInput()
-        con.write(bytes((message + "\n").encode()))
+        """send command to console and wait for certain word pattern"""
+        self.con.flushOutput()
+        self.con.flushInput()
+        self.con.write(bytes((message + "\n").encode()))
         time.sleep(1)
         mesg = self.wait_response()
         return mesg
 
     def record(self, enable):
-        global RECORD
-        global LOG
+        """enable or disable console log"""
         if enable:
-            LOG = ""
+            self.log = ""
         else:
-            with open("log.txt", "w") as file:
-                file.write(LOG)
+            with open("log.txt", "w", encoding="utf-8") as file:
+                file.write(self.log)
 
-        RECORD = enable
+        self.record_log = enable
 
-    def read_con(self, HANDLE_EMPTY=True):
-        global RECORD
-        global LOG
-        global con
-
+    def read_con(self, handle_empty=True):
+        """read from console"""
         while True:
-            mesg = (con.readline()).decode("utf-8", errors="ignore").strip()
-            if HANDLE_EMPTY is False or mesg != "":
+            mesg = (
+                (self.con.readline()).decode("utf-8", errors="ignore").strip()
+            )
+            if handle_empty is False or mesg != "":
                 break
 
-        if RECORD:
-            LOG = LOG + mesg + "\n"
+        if self.record_log:
+            self.log = self.log + mesg + "\n"
 
         print(mesg)
         return mesg

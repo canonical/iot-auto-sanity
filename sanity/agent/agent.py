@@ -1,14 +1,17 @@
+"""handle action seuence in tplan"""
+
 import time
-from sanity.agent.mail import mail
 from datetime import datetime
-from sanity.agent.style import gen_head_string
+from sanity.agent.mail import Mail
 from sanity.agent.checkbox import run_checkbox
+from sanity.agent.style import gen_head_string
 from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED
 
 
 def notify(status):
+    """send notification"""
     code = status["code"]
     content = ""
     log_file = ""
@@ -19,14 +22,17 @@ def notify(status):
     if "log" in status:
         log_file = status["log"]
 
-    mail.send_mail(
+    Mail.send_mail(
         code,
         content,
         log_file,
     )
 
 
+# pylint: disable=R0912,R0915,R1702
 def start(plan, con, sched=None):
+    """the really entry for iot sanity tool
+    execute action follow the tplan json"""
     while True:
         for stage in plan:
             if isinstance(stage, str):
@@ -107,8 +113,8 @@ def start(plan, con, sched=None):
                     syscmd(all_cmd)
                     print(gen_head_string("sys comand end"))
         if sched:
-            sched.WORK_FLAG = False
-            while sched.WORK_FLAG is False:
+            sched.work_flag = False
+            while sched.work_flag is False:
                 cur_time = datetime.now().strftime("%Y-%m-%d  %H:%M")
                 output_str = (
                     f"Current time: {cur_time}  Next job on: "
