@@ -1,14 +1,16 @@
+"""This module provide all provision methods"""
+
 import time
 import os
 import re
 import glob
 import yaml
-from wrapt_timeout_decorator import timeout
+from wrapt_timeout_decorator import timeout as Timeout
 from sanity.agent.net import get_ip, check_net_connection
 from sanity.agent.cmd import syscmd
 from sanity.agent.style import columns
 from sanity.agent.err import FAILED, SUCCESS
-from sanity.agent.data import dev_data
+from sanity.agent.data import DevData
 
 
 INSTALL_MODE = "install"
@@ -17,12 +19,14 @@ CLOUD_INIT = "cloud-init"
 CONSOLE_CONF = "console-conf"
 SYSTEM = "system-user"
 LOGIN = "login"
-init_mode_login_message = ""
+INIT_MODE_LOGIN_MESSAGE = ""
 
 
-def boot_assets_update(ADDR):
+# pylint: disable=R0912,R0914,R0915,R1702
+def boot_assets_update(addr):
+    """handle boot assets update"""
     ssh_option = (
-        '-o "UserKnownHostsFile=/dev/null" ' '-o "StrictHostKeyChecking=no"'
+        '-o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no"'
     )
 
     # Find the model assertion
@@ -32,7 +36,7 @@ def boot_assets_update(ADDR):
         return
 
     # Read the model assertion
-    with open(models[0], "r") as file:
+    with open(models[0], "r", encoding="utf-8") as file:
         content = file.read()
 
     # Remove the signature part after the empty line,
@@ -55,19 +59,19 @@ def boot_assets_update(ADDR):
         return
 
     gadget = None
-    gadget_files = glob.glob("seed/snaps/{}_*.snap".format(gadgets[0]))
+    gadget_files = glob.glob(f"seed/snaps/{gadgets[0]}_*.snap")
     if len(gadget_files) == 0:
         print("There is no gadget snap")
         return
     gadget = gadget_files[0]
 
-    cmd = "cp {} .".format(gadget)
+    cmd = f"cp {gadget} ."
     syscmd(cmd)
-    cmd = "unsquashfs -d temp {}".format(os.path.basename(gadget))
+    cmd = f"unsquashfs -d temp {os.path.basename(gadget)}"
     syscmd(cmd)
 
     file = "temp/meta/gadget.yaml"
-    with open(file, "r") as fp:
+    with open(file, "r", encoding="utf-8") as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
 
     for _, vol in data["volumes"].items():
@@ -81,19 +85,12 @@ def boot_assets_update(ADDR):
                             offset = (
                                 0 if "offset" not in part else part["offset"]
                             )
-                            print(
-                                "image = {} offset = {}".format(image, offset)
-                            )
+                            print(f"image = {image} offset = {offset}")
                             if (
                                 syscmd(
-                                    "sshpass -p {} scp -r {} temp/{} "
-                                    "{}@{}:~/".format(
-                                        dev_data.device_pwd,
-                                        ssh_option,
-                                        to_image,
-                                        dev_data.device_uname,
-                                        ADDR,
-                                    ),
+                                    f"sshpass -p {DevData.device_pwd} "
+                                    f"scp -r {ssh_option} temp/{to_image} "
+                                    f"{DevData.device_uname}@{addr}:~/",
                                     timeout=600,
                                 )
                                 != 0
@@ -101,17 +98,14 @@ def boot_assets_update(ADDR):
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
-                                'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
-                                "if={} of=/dev/disk/by-partlabel/{} seek={} "
-                                'bs=1"'.format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    dev_data.device_uname,
-                                    ADDR,
-                                    image,
-                                    part["name"],
-                                    offset,
-                                )
+                                f"sshpass -p {DevData.device_pwd} "
+                                f"ssh {ssh_option} "
+                                f"{DevData.device_uname}@{addr} "
+                                f'"set -x; sudo dd '
+                                f"if={image} "
+                                f'of=/dev/disk/by-partlabel/{part["name"]} '
+                                f"seek={offset} "
+                                'bs=1"'
                             )
                         elif "source" in con and "target" in con:
                             source = con["source"]
@@ -120,14 +114,9 @@ def boot_assets_update(ADDR):
                                 continue
                             if (
                                 syscmd(
-                                    "sshpass -p {} scp -r {} temp/{} "
-                                    "{}@{}:~/".format(
-                                        dev_data.device_pwd,
-                                        ssh_option,
-                                        source,
-                                        dev_data.device_uname,
-                                        ADDR,
-                                    ),
+                                    f"sshpass -p {DevData.device_pwd} "
+                                    f"scp -r {ssh_option} temp/{source} "
+                                    f"{DevData.device_uname}@{addr}:~/",
                                     timeout=600,
                                 )
                                 != 0
@@ -135,19 +124,15 @@ def boot_assets_update(ADDR):
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
-                                'sshpass -p {} ssh {} {}@{} "set -x; sudo cp '
-                                r"-avr {} \$(lsblk | grep \$(ls -l "
-                                "/dev/disk/by-partlabel/{} | rev | "
+                                f"sshpass -p {DevData.device_pwd} "
+                                f"ssh {ssh_option} "
+                                f"{DevData.device_uname}@{addr} "
+                                f'"set -x; sudo cp '
+                                rf"-avr {source} \$(lsblk | grep \$(ls -l "
+                                f'/dev/disk/by-partlabel/{part["name"]} '
+                                f"| rev | "
                                 "cut -d ' ' -f 1 | cut -d '/' -f 1 | rev) | "
-                                "rev | cut -d ' ' -f 1 | rev)/{}\"".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    dev_data.device_uname,
-                                    ADDR,
-                                    source,
-                                    part["name"],
-                                    target,
-                                )
+                                f"rev | cut -d ' ' -f 1 | rev)/{target}\""
                             )
             else:
                 for temppart in vol["structure"]:
@@ -159,17 +144,13 @@ def boot_assets_update(ADDR):
                         to_image = con["image"]
                         image = os.path.basename(to_image)
                         offset = part["offset"]
-                        print("image = {} offset = {}".format(image, offset))
+                        print(f"image = {image} offset = {offset}")
                         if (
                             syscmd(
-                                "sshpass -p {} scp -r {} "
-                                "temp/{} {}@{}:~/".format(
-                                    dev_data.device_pwd,
-                                    ssh_option,
-                                    to_image,
-                                    dev_data.device_uname,
-                                    ADDR,
-                                ),
+                                f"sshpass -p {DevData.device_pwd} "
+                                f"scp -r {ssh_option} "
+                                f"temp/{to_image} "
+                                f"{DevData.device_uname}@{addr}:~/",
                                 timeout=600,
                             )
                             != 0
@@ -177,32 +158,28 @@ def boot_assets_update(ADDR):
                             print("Upload boot assets failed")
                             return
                         syscmd(
-                            'sshpass -p {} ssh {} {}@{} "set -x; sudo dd '
-                            r"if={} of=/dev/\$(ls -l "
-                            "/dev/disk/by-partlabel/{} | rev | "
+                            f"sshpass -p {DevData.device_pwd} "
+                            f"ssh {ssh_option} {DevData.device_uname}@{addr} "
+                            f'"set -x; sudo dd '
+                            rf"if={image} of=/dev/\$(ls -l "
+                            f"/dev/disk/by-partlabel/{name} | rev | "
                             "cut -d ' ' -f 1 | cut -d '/' -f 1 | "
                             "rev | sed 's/p[0-9]\\+$//') "
-                            'seek={} bs=1"'.format(
-                                dev_data.device_pwd,
-                                ssh_option,
-                                dev_data.device_uname,
-                                ADDR,
-                                image,
-                                name,
-                                offset,
-                            )
+                            f'seek={offset} bs=1"'
                         )
 
-    cmd = "rm -fr temp {}".format(os.path.basename(gadget))
+    cmd = f"rm -fr temp {os.path.basename(gadget)}"
     syscmd(cmd)
 
 
+# pylint: disable=R0911,R0912,R0914,R0915
 def deploy(con, method, user_init, update_boot_assets, timeout=600):
+    """handle different provision method and run provision"""
     match method:
         case "utp_com":
             # This method is currently used for i.MX6 devices that does not
             # use uuu to flash image
-            # ToDo: Currently we only use this method for Tillamook project,
+            # Currently we only use this method for Tillamook project,
             # if there will be other projects need to use this method, we need
             # to make it more generic
             image_tarball = [
@@ -219,9 +196,10 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 "  sudo snap install imx6-img-flash-tool --devmode --edge; "
                 "fi"
             )
+
             syscmd(f"set -x; tar xf {image_tarball}")
             flash_script_dir = ""
-            for dirpath, dirnames, filenames in os.walk("."):
+            for dirpath, _, filenames in os.walk("."):
                 filename = [
                     f for f in filenames if re.search(r"flash.+\.sh$", f)
                 ]
@@ -235,14 +213,13 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 syscmd(
                     f"set -x; cd {flash_script_dir} && "
                     f"sudo imx6-img-flash-tool.flash ../{image_name} "
-                    "../u-boot-500.imx",
-                    timeout=1200,
+                    "../u-boot-500.imx"
                 )
                 != 0
             ):
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project}"
+                    "mesg": f"{DevData.project}"
                     f" auto sanity was failed, deploy failed.",
                 }
 
@@ -257,7 +234,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             if syscmd("sudo uuu uc.lst") != 0:
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    "mesg": f"{DevData.project} auto sanity was failed,"
                     f" deploy failed.",
                 }
 
@@ -272,7 +249,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                     if syscmd("sudo uuu uc.lst") != 0:
                         return {
                             "code": FAILED,
-                            "mesg": f"{dev_data.project}"
+                            "mesg": f"{DevData.project}"
                             f" auto sanity was failed, deploy failed.",
                         }
 
@@ -282,23 +259,23 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
 
         case "seed_override":
             login(con)
-            ADDR = get_ip(con)
-            if ADDR == FAILED:
+            addr = get_ip(con)
+            if addr == FAILED:
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    "mesg": f"{DevData.project} auto sanity was failed,"
                     f"target device DHCP failed.",
                 }
 
-            if check_net_connection(ADDR) == FAILED:
+            if check_net_connection(addr) == FAILED:
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    "mesg": f"{DevData.project} auto sanity was failed,"
                     f"target device connection timeout.",
                 }
 
             if update_boot_assets:
-                boot_assets_update(ADDR)
+                boot_assets_update(addr)
 
             scp_cmd = (
                 'scp -r -o "UserKnownHostsFile=/dev/null" '
@@ -306,12 +283,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             )
             if (
                 syscmd(
-                    "sshpass -p {} {} seed {}@{}:~/".format(
-                        dev_data.device_pwd,
-                        scp_cmd,
-                        dev_data.device_uname,
-                        ADDR,
-                    ),
+                    f"sshpass -p {DevData.device_pwd} "
+                    f"{scp_cmd} seed {DevData.device_uname}@{addr}:~/",
                     timeout=600,
                 )
                 != 0
@@ -332,35 +305,32 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             )
             # We don't wait for prompt due to system could
             # possible reboot immediately without prompt
-            con.write_con_no_wait(
-                "sudo snap reboot --install {}".format(
-                    os.path.relpath(
-                        str(glob.glob("seed/systems/[0-9]*")[0]),
-                        "seed/systems",
-                    )
-                )
+            label = os.path.relpath(
+                str(glob.glob("seed/systems/[0-9]*")[0]),
+                "seed/systems",
             )
+            con.write_con_no_wait(f"sudo snap reboot --install {label}")
             con.write_con_no_wait("sudo reboot")
 
         case "seed_override_lk":
             login(con)
-            ADDR = get_ip(con)
-            if ADDR == FAILED:
+            addr = get_ip(con)
+            if addr == FAILED:
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    "mesg": f"{DevData.project} auto sanity was failed,"
                     f"target device DHCP failed.",
                 }
 
-            if check_net_connection(ADDR) == FAILED:
+            if check_net_connection(addr) == FAILED:
                 return {
                     "code": FAILED,
-                    "mesg": f"{dev_data.project} auto sanity was failed,"
+                    "mesg": f"{DevData.project} auto sanity was failed,"
                     f"target device connection timeout.",
                 }
 
             if update_boot_assets:
-                boot_assets_update(ADDR)
+                boot_assets_update(addr)
 
             # beside seed/, also copy additional files for little-kernel
 
@@ -370,13 +340,9 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             )
             if (
                 syscmd(
-                    "sshpass -p {} {} seed boot.img snaprecoverysel.bin "
-                    "{}@{}:~/".format(
-                        dev_data.device_pwd,
-                        scp_cmd,
-                        dev_data.device_uname,
-                        ADDR,
-                    ),
+                    f"sshpass -p {DevData.device_pwd} "
+                    f"{scp_cmd} seed boot.img snaprecoverysel.bin "
+                    f"{DevData.device_uname}@{addr}:~/",
                     timeout=600,
                 )
                 != 0
@@ -408,14 +374,11 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             )
             # We don't wait for prompt due to system could possible reboot
             # immediately without prompt
-            con.write_con_no_wait(
-                "sudo snap reboot --install {}".format(
-                    os.path.relpath(
-                        str(glob.glob("seed/systems/[0-9]*")[0]),
-                        "seed/systems",
-                    )
-                )
+            label = os.path.relpath(
+                str(glob.glob("seed/systems/[0-9]*")[0]),
+                "seed/systems",
             )
+            con.write_con_no_wait(f"sudo snap reboot --install {label}")
             con.write_con_no_wait("sudo reboot")
 
         case _:
@@ -429,36 +392,36 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
 #
 # =============================================
 def login(con):
-    TPASS = "insecure"
+    """simulate system login action"""
+    tpass = "insecure"
     chpass = False
     while True:
         mesg = con.read_con(False)
-        if mesg.find(f"{dev_data.hostname} login:") != -1:
-            con.write_con_no_wait(dev_data.device_uname)
+        if mesg.find(f"{DevData.hostname} login:") != -1:
+            con.write_con_no_wait(DevData.device_uname)
 
         elif mesg.find("Password:") != -1:
-            con.write_con_no_wait(dev_data.device_pwd)
+            con.write_con_no_wait(DevData.device_pwd)
 
         elif mesg.find("(current) UNIX password:") != -1:
-            con.write_con_no_wait(dev_data.device_pwd)
+            con.write_con_no_wait(DevData.device_pwd)
             chpass = True
 
         elif mesg.find("Enter new UNIX password") != -1:
-            con.write_con_no_wait(TPASS)
+            con.write_con_no_wait(tpass)
 
         elif mesg.find("Retype new UNIX password:") != -1:
-            con.write_con_no_wait(TPASS)
+            con.write_con_no_wait(tpass)
 
-        elif mesg.find(dev_data.device_uname + "@") != -1:
+        elif mesg.find(DevData.device_uname + "@") != -1:
             con.write_con(
                 'sudo snap set system refresh.hold="$(date --date=tomorrow'
                 ' +%Y-%m-%dT%H:%M:%S%:z)"'
             )
             if chpass is True:
                 con.write_con(
-                    "sudo echo {}:{} | sudo chpasswd".format(
-                        dev_data.device_uname, dev_data.device_pwd
-                    )
+                    f"sudo echo {DevData.device_uname}:{DevData.device_pwd} "
+                    f"| sudo chpasswd"
                 )
             return
 
@@ -469,9 +432,10 @@ def login(con):
 # This function is for login after installation,
 # run mode would include cloud-init before we can login.
 # So we check if cloud-init before we login.
-@timeout(dec_timeout=600)
+# pylint: disable=W0603
+@Timeout(dec_timeout=600)
 def __boot_login(con, userinit, is_init_mode):
-    global init_mode_login_message
+    global INIT_MODE_LOGIN_MESSAGE
     state = INSTALL_MODE
 
     con.record(True)
@@ -483,7 +447,7 @@ def __boot_login(con, userinit, is_init_mode):
                     if is_init_mode is False:
                         state = RUN_MODE
                     else:
-                        init_mode_login_message = (
+                        INIT_MODE_LOGIN_MESSAGE = (
                             "install mode or run mode timeout"
                         )
                         state = userinit
@@ -514,7 +478,7 @@ def __boot_login(con, userinit, is_init_mode):
     if is_init_mode is False:
         return
 
-    init_mode_login_message = "connect to store timeout"
+    INIT_MODE_LOGIN_MESSAGE = "connect to store timeout"
     while True:
         changes = con.write_con('snap changes | grep "Initialize device"')
         if changes.find("Done") != -1:
@@ -529,21 +493,20 @@ def __boot_login(con, userinit, is_init_mode):
         time.sleep(5)
 
 
+# pylint: disable=E1123
 def boot_login(con, user_init=None, is_init_mode=False, timeout=600):
-    global init_mode_login_message
+    """For prevent keep trying login, this function would
+    catch some system ready pattern then try login"""
 
     try:
         __boot_login(con, user_init, is_init_mode, dec_timeout=timeout)
-    except Exception as e:
+    except TimeoutError as e:
         con.record(False)
-        print(
-            f"Initial Device timeout: {init_mode_login_message}"
-            " code {}".format(e)
-        )
+        print(f"Initial Device timeout: {INIT_MODE_LOGIN_MESSAGE} code {e}")
         return {
             "code": FAILED,
-            "mesg": f"{dev_data.project} auto sanity was failed."
-            f" Initial Device timeout: {init_mode_login_message}",
+            "mesg": f"{DevData.project} auto sanity was failed."
+            f" Initial Device timeout: {INIT_MODE_LOGIN_MESSAGE}",
             "log": "log.txt",
         }
     return {"code": SUCCESS}

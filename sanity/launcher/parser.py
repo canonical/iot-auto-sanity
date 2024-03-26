@@ -1,3 +1,5 @@
+"""Provide json schema validate methid"""
+
 import os
 import json
 import yaml
@@ -180,9 +182,11 @@ LAUNCHER_SCHEMA = {
 
 
 class LauncherParser:
+    """for verify tplan"""
+
     def __init__(self, file):
         _, ext = os.path.splitext(file)
-        with open(file, "r") as fp:
+        with open(file, "r", encoding="utf-8") as fp:
             if ext == ".json":
                 self._data = json.load(fp)
             elif ext in [".yaml", ".yml"]:
@@ -196,11 +200,14 @@ class LauncherParser:
 
     @property
     def data(self):
+        """get data"""
         return self._data
 
     def validate_data(self):
+        """validate iot sanit tplan json"""
+
         try:
             validate(instance=self._data, schema=LAUNCHER_SCHEMA)
             print("the JSON data is valid")
         except jsonschema.exceptions.ValidationError as err:
-            raise ValueError("the JSON data is invalid, err {}".format(err))
+            raise ValueError(f"the JSON data is invalid, err {err}") from err

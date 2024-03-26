@@ -1,15 +1,18 @@
+"""start sanity process"""
+
 import sys
 import serial
 from sanity.agent import agent
-from sanity.agent.mail import mail
-from sanity.agent.console import console
-from sanity.agent.scheduler import scheduler
-from sanity.agent.data import dev_data
+from sanity.agent.mail import Mail
+from sanity.agent.console import Console
+from sanity.agent.scheduler import Scheduler
+from sanity.agent.data import DevData
 from sanity.agent.err import FAILED
 from sanity.launcher.parser import LauncherParser
 
 
 def start_agent(cfg):
+    """sanity main agent"""
     lanncher_parser = LauncherParser(cfg)
     launcher_data = lanncher_parser.data
 
@@ -19,24 +22,24 @@ def start_agent(cfg):
 
     cfg_data = launcher_data["config"]
 
-    dev_data.project = cfg_data.get("project_name")
-    dev_data.device_uname = cfg_data.get("username")
-    dev_data.device_pwd = cfg_data.get("password")
-    con = console(
-        dev_data.device_uname,
+    DevData.project = cfg_data.get("project_name")
+    DevData.device_uname = cfg_data.get("username")
+    DevData.device_pwd = cfg_data.get("password")
+    con = Console(
+        DevData.device_uname,
         cfg_data["serial_console"]["port"],
         cfg_data["serial_console"]["baud_rate"],
     )
-    dev_data.IF = cfg_data["network"]
+    DevData.IF = cfg_data["network"]
 
     if cfg_data.get("recipients"):
-        mail.recipients.extend(cfg_data.get("recipients"))
+        Mail.recipients.extend(cfg_data.get("recipients"))
 
     if cfg_data.get("hostname"):
-        dev_data.hostname = cfg_data.get("hostname")
+        DevData.hostname = cfg_data.get("hostname")
 
     if launcher_data.get("period"):
-        sched = scheduler(launcher_data.get("period"))
+        sched = Scheduler(launcher_data.get("period"))
     else:
         sched = None
 
@@ -45,10 +48,10 @@ def start_agent(cfg):
     except serial.SerialException as e:
         print(
             "device disconnected or multiple access on port?"
-            " error code {}".format(e)
+            f" error code {e}"
         )
-        mail.send_mail(
+        Mail.send_mail(
             FAILED,
-            f"{dev_data.project} device disconnected "
+            f"{DevData.project} device disconnected "
             "or multiple access on port?",
         )

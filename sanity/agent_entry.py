@@ -1,8 +1,11 @@
+"""sanity tool entry"""
+
 import argparse
 from sanity.agent import start_agent
 
 
 def main():
+    """start sanity tool"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--sanity-launcher",
