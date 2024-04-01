@@ -213,7 +213,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 syscmd(
                     f"set -x; cd {flash_script_dir} && "
                     f"sudo imx6-img-flash-tool.flash ../{image_name} "
-                    "../u-boot-500.imx"
+                    "../u-boot-500.imx",
+                    timeout=timeout,
                 )
                 != 0
             ):
