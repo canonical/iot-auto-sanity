@@ -65,6 +65,7 @@ LAUNCHER_SCHEMA = {
                                             "uuu_bootloader",
                                             "seed_override",
                                             "seed_override_lk",
+                                            "seed_override_nocheck",
                                         ],
                                     },
                                     "method": {"$ref": "#/$defs/method"},

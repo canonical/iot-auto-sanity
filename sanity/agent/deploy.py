@@ -175,6 +175,7 @@ def boot_assets_update(addr):
 # pylint: disable=R0911,R0912,R0914,R0915
 def deploy(con, method, user_init, update_boot_assets, timeout=600):
     """handle different provision method and run provision"""
+    files = "seed"
     match method:
         case "utp_com":
             # This method is currently used for i.MX6 devices that does not
@@ -258,7 +259,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                     con.write_con_no_wait("run bootcmd")
                     break
 
-        case "seed_override":
+        case "seed_override" | "seed_override_lk" | "seed_override_nocheck":
             login(con)
             addr = get_ip(con)
             if addr == FAILED:
@@ -282,10 +283,15 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 'scp -r -o "UserKnownHostsFile=/dev/null" '
                 '-o "StrictHostKeyChecking=no"'
             )
+
+            if method == "seed_override_lk":
+                files += " boot.img snaprecoverysel.bin"
+
             if (
                 syscmd(
                     f"sshpass -p {DevData.device_pwd} "
-                    f"{scp_cmd} seed {DevData.device_uname}@{addr}:~/",
+                    f"{scp_cmd} {files} "
+                    f"{DevData.device_uname}@{addr}:~/",
                     timeout=600,
                 )
                 != 0
@@ -304,6 +310,18 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 "awk -F':[0-9]* ' '/:/{print $2}' | "
                 "xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
             )
+            if method == "seed_override_lk":
+                con.write_con(
+                    "sudo cp boot.img /dev/disk/by-partlabel/boot-ra && cd ~/"
+                )
+                con.write_con(
+                    "sudo cp snaprecoverysel.bin"
+                    " /dev/disk/by-partlabel/snaprecoverysel && cd ~/"
+                )
+                con.write_con(
+                    "sudo cp snaprecoverysel.bin"
+                    " /dev/disk/by-partlabel/snaprecoveryselbak && cd ~/"
+                )
             # We don't wait for prompt due to system could
             # possible reboot immediately without prompt
             label = os.path.relpath(
@@ -313,74 +331,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             con.write_con_no_wait(f"sudo snap reboot --install {label}")
             con.write_con_no_wait("sudo reboot")
 
-        case "seed_override_lk":
-            login(con)
-            addr = get_ip(con)
-            if addr == FAILED:
-                return {
-                    "code": FAILED,
-                    "mesg": f"{DevData.project} auto sanity was failed,"
-                    f"target device DHCP failed.",
-                }
-
-            if check_net_connection(addr) == FAILED:
-                return {
-                    "code": FAILED,
-                    "mesg": f"{DevData.project} auto sanity was failed,"
-                    f"target device connection timeout.",
-                }
-
-            if update_boot_assets:
-                boot_assets_update(addr)
-
-            # beside seed/, also copy additional files for little-kernel
-
-            scp_cmd = (
-                'scp -r -o "UserKnownHostsFile=/dev/null" '
-                '-o "StrictHostKeyChecking=no"'
-            )
-            if (
-                syscmd(
-                    f"sshpass -p {DevData.device_pwd} "
-                    f"{scp_cmd} seed boot.img snaprecoverysel.bin "
-                    f"{DevData.device_uname}@{addr}:~/",
-                    timeout=600,
-                )
-                != 0
-            ):
-                print("Upload seed file failed")
-                return {"code": FAILED}
-
-            con.write_con("cd ~/")
-            con.write_con(
-                "cd /run/mnt/ubuntu-seed && sudo ls -lA | "
-                "awk -F':[0-9]* ' '/:/{print $2}' | "
-                "xargs -i sudo rm -fr {} && cd ~/"
-            )
-            con.write_con(
-                "cd seed/ && ls -lA | "
-                "awk -F':[0-9]* ' '/:/{print $2}' | "
-                "xargs -i sudo cp -fr {} /run/mnt/ubuntu-seed/ && cd ~/"
-            )
-            con.write_con(
-                "sudo cp boot.img /dev/disk/by-partlabel/boot-ra && cd ~/"
-            )
-            con.write_con(
-                "sudo cp snaprecoverysel.bin"
-                " /dev/disk/by-partlabel/snaprecoverysel && cd ~/"
-            )
-            con.write_con(
-                "sudo cp snaprecoverysel.bin"
-                " /dev/disk/by-partlabel/snaprecoveryselbak && cd ~/"
-            )
-            # We don't wait for prompt due to system could possible reboot
-            # immediately without prompt
-            label = os.path.relpath(
-                str(glob.glob("seed/systems/[0-9]*")[0]),
-                "seed/systems",
-            )
-            con.write_con_no_wait(f"sudo snap reboot --install {label}")
-            con.write_con_no_wait("sudo reboot")
+            if method == "seed_override_nocheck":
+                return {"code": SUCCESS}
 
         case _:
             return {"code": FAILED}
