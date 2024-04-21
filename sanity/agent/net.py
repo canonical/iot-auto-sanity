@@ -41,6 +41,6 @@ def check_net_connection(addr):
         if retry > 10:
             return FAILED
 
-        status = syscmd("ping -c 1 " + addr)
+        status, _ = syscmd("ping -c 1 " + addr)
 
     return SUCCESS
