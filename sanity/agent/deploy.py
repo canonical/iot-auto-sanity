@@ -86,15 +86,13 @@ def boot_assets_update(addr):
                                 0 if "offset" not in part else part["offset"]
                             )
                             print(f"image = {image} offset = {offset}")
-                            if (
-                                syscmd(
-                                    f"sshpass -p {DevData.device_pwd} "
-                                    f"scp -r {ssh_option} temp/{to_image} "
-                                    f"{DevData.device_uname}@{addr}:~/",
-                                    timeout=600,
-                                )
-                                != 0
-                            ):
+                            status, _ = syscmd(
+                                f"sshpass -p {DevData.device_pwd} "
+                                f"scp -r {ssh_option} temp/{to_image} "
+                                f"{DevData.device_uname}@{addr}:~/",
+                                timeout=600,
+                            )
+                            if status != 0:
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
@@ -112,15 +110,13 @@ def boot_assets_update(addr):
                             target = con["target"]
                             if "$kernel" in source or "boot.sel" in source:
                                 continue
-                            if (
-                                syscmd(
-                                    f"sshpass -p {DevData.device_pwd} "
-                                    f"scp -r {ssh_option} temp/{source} "
-                                    f"{DevData.device_uname}@{addr}:~/",
-                                    timeout=600,
-                                )
-                                != 0
-                            ):
+                            status, _ = syscmd(
+                                f"sshpass -p {DevData.device_pwd} "
+                                f"scp -r {ssh_option} temp/{source} "
+                                f"{DevData.device_uname}@{addr}:~/",
+                                timeout=600,
+                            )
+                            if status != 0:
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
@@ -145,16 +141,14 @@ def boot_assets_update(addr):
                         image = os.path.basename(to_image)
                         offset = part["offset"]
                         print(f"image = {image} offset = {offset}")
-                        if (
-                            syscmd(
-                                f"sshpass -p {DevData.device_pwd} "
-                                f"scp -r {ssh_option} "
-                                f"temp/{to_image} "
-                                f"{DevData.device_uname}@{addr}:~/",
-                                timeout=600,
-                            )
-                            != 0
-                        ):
+                        status, _ = syscmd(
+                            f"sshpass -p {DevData.device_pwd} "
+                            f"scp -r {ssh_option} "
+                            f"temp/{to_image} "
+                            f"{DevData.device_uname}@{addr}:~/",
+                            timeout=600,
+                        )
+                        if status != 0:
                             print("Upload boot assets failed")
                             return
                         syscmd(
@@ -210,15 +204,13 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             # 1. Use dyper to press the button on device
             # 2. Use type-c mux to switch to flash cable
             # 3. power on the device
-            if (
-                syscmd(
-                    f"set -x; cd {flash_script_dir} && "
-                    f"sudo imx6-img-flash-tool.flash ../{image_name} "
-                    "../u-boot-500.imx",
-                    timeout=timeout,
-                )
-                != 0
-            ):
+            status, _ = syscmd(
+                f"set -x; cd {flash_script_dir} && "
+                f"sudo imx6-img-flash-tool.flash ../{image_name} "
+                "../u-boot-500.imx",
+                timeout=timeout,
+            )
+            if status != 0:
                 return {
                     "code": FAILED,
                     "mesg": f"{DevData.project}"
@@ -233,7 +225,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             return {"code": SUCCESS}
 
         case "uuu":
-            if syscmd("sudo uuu uc.lst") != 0:
+            status, _ = syscmd("sudo uuu uc.lst")
+            if status != 0:
                 return {
                     "code": FAILED,
                     "mesg": f"{DevData.project} auto sanity was failed,"
@@ -248,7 +241,8 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
                 if mesg.find("Fastboot:") != -1:
                     con.write_con_no_wait()
                     con.write_con_no_wait("fastboot usb 0")
-                    if syscmd("sudo uuu uc.lst") != 0:
+                    status, _ = syscmd("sudo uuu uc.lst")
+                    if status != 0:
                         return {
                             "code": FAILED,
                             "mesg": f"{DevData.project}"
@@ -287,15 +281,13 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
             if method == "seed_override_lk":
                 files += " boot.img snaprecoverysel.bin"
 
-            if (
-                syscmd(
-                    f"sshpass -p {DevData.device_pwd} "
-                    f"{scp_cmd} {files} "
-                    f"{DevData.device_uname}@{addr}:~/",
-                    timeout=600,
-                )
-                != 0
-            ):
+            status, _ = syscmd(
+                f"sshpass -p {DevData.device_pwd} "
+                f"{scp_cmd} {files} "
+                f"{DevData.device_uname}@{addr}:~/",
+                timeout=600,
+            )
+            if status != 0:
                 print("Upload seed file failed")
                 return {"code": FAILED}
 

@@ -2,6 +2,7 @@
 
 import os
 import time
+import re
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.net import get_ip, check_net_connection
@@ -56,13 +57,19 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                 )
                 syscmd(f"mv report.tar.xz {report_name}")
                 print(upload_command)
-                syscmd(upload_command)
+                status, result = syscmd(upload_command)
+                result = "None"
+                if status == 0:
+                    report = re.search(
+                        r"(?P<url>https?://certification.canonical.com[^\s]+)",
+                        (result.stdout).decode("utf-8"),
+                    ).group("url")
                 print("auto sanity is finished")
                 return {
                     "code": SUCCESS,
                     "mesg": f"{DevData.project} run {runner_cfg},"
-                    f" auto sanity was finished on {mail_t}",
-                    "log": report_name,
+                    f" auto sanity was finished on {mail_t},"
+                    f"report: {report}",
                 }
 
             else:
