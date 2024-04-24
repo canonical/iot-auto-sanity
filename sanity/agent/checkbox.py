@@ -58,7 +58,6 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                 syscmd(f"mv report.tar.xz {report_name}")
                 print(upload_command)
                 status, result = syscmd(upload_command)
-                result = "None"
                 if status == 0:
                     report = re.search(
                         r"(?P<url>https?://certification.canonical.com[^\s]+)",
