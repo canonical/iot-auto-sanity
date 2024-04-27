@@ -57,6 +57,8 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                 )
                 syscmd(f"mv report.tar.xz {report_name}")
                 print(upload_command)
+
+                report = "failed to submit report"
                 status, result = syscmd(upload_command)
                 if status == 0:
                     report = re.search(
