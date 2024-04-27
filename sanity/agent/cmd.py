@@ -16,9 +16,9 @@ def syscmd(message="", timeout=300):
         )
     except Subprocess.CalledProcessError:
         print(f"command {message} failed")
-        return FAILED, None
+        return FAILED, f"command {message} failed"
     except Subprocess.TimeoutExpired:
         print(f"command {message} timeout, timeout={timeout}")
-        return FAILED, None
+        return FAILED, f"command {message} timeout"
 
     return SUCCESS, result
