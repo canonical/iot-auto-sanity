@@ -65,6 +65,7 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
                         r"(?P<url>https?://certification.canonical.com[^\s]+)",
                         (result.stdout).decode("utf-8"),
                     ).group("url")
+                print(f"report: {report}")
                 print("auto sanity is finished")
                 return {
                     "code": SUCCESS,
