@@ -1,6 +1,5 @@
 """For handle checkbox task"""
 
-import os
 import time
 import re
 from sanity.agent.cmd import syscmd
@@ -10,12 +9,8 @@ from sanity.agent.data import DevData
 
 
 # pylint: disable=R1705,R0801
-def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
+def run_checkbox(con, runner_cfg, secure_id, desc):
     """run checkbox and submit report to C3"""
-    scp_cmd = (
-        'scp -v -o "UserKnownHostsFile=/dev/null" '
-        '-o "StrictHostKeyChecking=no"'
-    )
 
     addr = get_ip(con)
     if addr == FAILED:
@@ -32,53 +27,42 @@ def run_checkbox(con, cbox, runner_cfg, secure_id, desc):
             f"target device connection timeout.",
         }
 
-    syscmd(
-        f"sshpass -p  {DevData.device_pwd} {scp_cmd} {runner_cfg} "
-        f"{DevData.device_uname}@{addr}:~/"
+    status, result = syscmd(
+        f"sudo checkbox.checkbox-cli control {addr} {runner_cfg}", 43200
     )
-    con.write_con(f"sudo snap set {cbox} slave=disabled")
-    con.write_con_no_wait(f"sudo {cbox}.checkbox-cli {runner_cfg}")
 
-    while True:
-        mesg = con.read_con()
-        if f"file:///home/{DevData.device_uname}/report.tar.xz" in mesg:
-            syscmd(
-                f"sshpass -p  {DevData.device_pwd} {scp_cmd} "
-                f"{DevData.device_uname}@{addr}:report.tar.xz ."
-            )
-            file_t = time.strftime("%Y%m%d%H%M")
-            mail_t = time.strftime("%Y/%m/%d %H:%M")
+    mail_t = time.strftime("%Y/%m/%d %H:%M")
 
-            if os.path.exists("report.tar.xz"):
-                report_name = f"report-{file_t}.tar.xz"
-                upload_command = (
-                    f'checkbox.checkbox-cli submit -m "{desc}" '
-                    f"{secure_id} {report_name}"
-                )
-                syscmd(f"mv report.tar.xz {report_name}")
-                print(upload_command)
+    if status == 0:
+        upload_command = (
+            f'checkbox.checkbox-cli submit -m "{desc}" '
+            f"{secure_id} report.tar.xz"
+        )
+        print(upload_command)
 
+        status, result = syscmd(upload_command)
+        if status == 0:
+            try:
+                report = re.search(
+                    r"(?P<url>https?://certification.canonical.com[^\s]+)",
+                    result,
+                ).group("url")
+            except AttributeError:
                 report = "failed to submit report"
-                status, result = syscmd(upload_command)
-                if status == 0:
-                    report = re.search(
-                        r"(?P<url>https?://certification.canonical.com[^\s]+)",
-                        (result.stdout).decode("utf-8"),
-                    ).group("url")
-                print(f"report: {report}")
-                print("auto sanity is finished")
-                return {
-                    "code": SUCCESS,
-                    "mesg": f"{DevData.project} run {runner_cfg},"
-                    f" auto sanity was finished on {mail_t},"
-                    f"report: {report}",
-                }
 
-            else:
-                print("auto sanity is failed")
+        print(f"report: {report}")
+        print("auto sanity is finished")
+        return {
+            "code": SUCCESS,
+            "mesg": f"{DevData.project} run {runner_cfg},"
+            f" auto sanity was finished on {mail_t},"
+            f"report: {report}",
+        }
 
-                return {
-                    "code": FAILED,
-                    "mesg": f"{DevData.project} auto sanity was failed,"
-                    f" checkbox report is missing. {mail_t}",
-                }
+    else:
+        print("auto sanity is failed")
+
+        return {
+            "code": FAILED,
+            "mesg": f"{DevData.project} auto sanity was failed,",
+        }

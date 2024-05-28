@@ -86,7 +86,6 @@ def start(plan, con, sched=None):
                     print(gen_head_string("run checkbox"))
                     status = run_checkbox(
                         con,
-                        stage["checkbox"].get("snap_name"),
                         stage["checkbox"].get("launcher"),
                         stage["checkbox"].get("secure_id"),
                         stage["checkbox"].get(
