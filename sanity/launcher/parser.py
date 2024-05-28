@@ -80,7 +80,6 @@ LAUNCHER_SCHEMA = {
                             "checkbox": {
                                 "type": "object",
                                 "properties": {
-                                    "snap_name": {"type": "string"},
                                     "launcher": {"type": "string"},
                                     "secure_id": {
                                         "type": "string",
@@ -91,7 +90,6 @@ LAUNCHER_SCHEMA = {
                                     },
                                 },
                                 "required": [
-                                    "snap_name",
                                     "launcher",
                                     "secure_id",
                                 ],
