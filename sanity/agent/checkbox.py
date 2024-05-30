@@ -1,5 +1,6 @@
 """For handle checkbox task"""
 
+import os
 import time
 import re
 from sanity.agent.cmd import syscmd
@@ -27,13 +28,12 @@ def run_checkbox(con, runner_cfg, secure_id, desc):
             f"target device connection timeout.",
         }
 
-    status, result = syscmd(
-        f"sudo checkbox.checkbox-cli control {addr} {runner_cfg}", 43200
-    )
+    syscmd(f"sudo checkbox.checkbox-cli control {addr} {runner_cfg}", 43200)
 
     mail_t = time.strftime("%Y/%m/%d %H:%M")
 
-    if status == 0:
+    # if status == 0:
+    if os.path.exists("report.tar.xz"):
         upload_command = (
             f'checkbox.checkbox-cli submit -m "{desc}" '
             f"{secure_id} report.tar.xz"
@@ -48,8 +48,9 @@ def run_checkbox(con, runner_cfg, secure_id, desc):
                     result,
                 ).group("url")
             except AttributeError:
-                report = "failed to submit report"
-
+                print("report url is not found")
+        else:
+            report = "failed to submit report"
         print(f"report: {report}")
         print("auto sanity is finished")
         return {
