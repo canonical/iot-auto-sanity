@@ -50,7 +50,8 @@ def run_checkbox(con, runner_cfg, secure_id, desc):
                 ).group("url")
             except AttributeError:
                 print("report url is not found")
-
+        else:
+            report = "failed to submit report"
         print(f"report: {report}")
         print("auto sanity is finished")
         return {
