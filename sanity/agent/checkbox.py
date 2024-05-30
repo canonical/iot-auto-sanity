@@ -41,7 +41,6 @@ def run_checkbox(con, runner_cfg, secure_id, desc):
         print(upload_command)
 
         status, result = syscmd(upload_command)
-        report = "failed to submit report"
         if status == 0:
             try:
                 report = re.search(
