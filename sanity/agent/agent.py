@@ -75,6 +75,7 @@ def start(plan, con, sched=None):
                         con,
                         stage["deploy"].get("utility"),
                         stage["deploy"].get("method"),
+                        stage["deploy"].get("extra_provision_tool_args"),
                         stage["deploy"].get("update_boot_assets", False),
                         stage["deploy"].get("timeout", 600),
                     )

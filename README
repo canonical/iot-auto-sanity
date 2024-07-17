@@ -12,7 +12,7 @@ Program your own tplan yaml
             password: target device user password
             serial_console:
                 port: /dev/ttyUSBxxx
-                baud_rate: baud rate, support[115200, 9600]
+                baud_rate: baud rate, support[115200, 9600, 921600]
             network: target device interface
             extra-recepients: ["yourmail@mail.com"]
         

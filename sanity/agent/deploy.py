@@ -166,11 +166,58 @@ def boot_assets_update(addr):
     syscmd(cmd)
 
 
-# pylint: disable=R0911,R0912,R0914,R0915
-def deploy(con, method, user_init, update_boot_assets, timeout=600):
+# pylint: disable=R0911,R0912,R0913,R0914,R0915
+def deploy(
+    con,
+    method,
+    user_init,
+    extra_provision_tool_args,
+    update_boot_assets,
+    timeout=600,
+):
     """handle different provision method and run provision"""
     files = "seed"
     match method:
+        case "genio_flash":
+            # Assuming the host is >= 22.04
+            syscmd(
+                "set -x; sudo apt-get install -y python3-pip python3-pip-whl"
+            )
+            gitlab_url = (
+                "git+https://gitlab.com/mediatek/aiot/bsp/"
+                + "genio-tools.git#egg=genio-tools"
+            )
+            syscmd(f"set -x; pip3 install -U -e {gitlab_url}")
+            syscmd("set -x; export PATH=$PATH:/home/$USER/.local/bin/")
+            syscmd("set -x; genio-config")
+            image_tarball = [
+                f
+                for f in os.listdir("./")
+                if re.search(
+                    r"genio-(core|classic-(server|desktop)).*\.(tar\.xz)$",
+                    f,
+                )
+            ][0]
+            image_dir = image_tarball.split(".")[0]
+            boot_assets_tarball = [
+                f
+                for f in os.listdir("./")
+                if re.search(
+                    r"genio.*boot-assets.*\.(tar\.xz)$",
+                    f,
+                )
+            ][0]
+            syscmd(f"set -x; rm -rf {image_dir}")
+            syscmd(f"set -x; tar xf {image_tarball}")
+            syscmd(
+                "set -x; tar --strip-components=1 -xf "
+                f"{boot_assets_tarball} -C {image_dir}"
+            )
+            syscmd(
+                f"set -x; cd {image_dir};"
+                f"genio-flash '{extra_provision_tool_args}'"
+            )
+
         case "utp_com":
             # This method is currently used for i.MX6 devices that does not
             # use uuu to flash image
