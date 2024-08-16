@@ -338,7 +338,7 @@ def deploy(con, method, user_init, update_boot_assets, timeout=600):
 # =============================================
 def login(con):
     """simulate system login action"""
-    tpass = "insecure"
+    tpass = "iotuciotuc"
     chpass = False
     while True:
         mesg = con.read_con(False)
@@ -348,14 +348,23 @@ def login(con):
         elif mesg.find("Password:") != -1:
             con.write_con_no_wait(DevData.device_pwd)
 
-        elif mesg.find("(current) UNIX password:") != -1:
+        elif (
+            mesg.find("(current) UNIX password:") != -1
+            or mesg.find("Current password:") != -1
+        ):
             con.write_con_no_wait(DevData.device_pwd)
             chpass = True
 
-        elif mesg.find("Enter new UNIX password") != -1:
+        elif (
+            mesg.find("Enter new UNIX password") != -1
+            or mesg.find("New password") != -1
+        ):
             con.write_con_no_wait(tpass)
 
-        elif mesg.find("Retype new UNIX password:") != -1:
+        elif (
+            mesg.find("Retype new UNIX password:") != -1
+            or mesg.find("Retype new password:") != -1
+        ):
             con.write_con_no_wait(tpass)
 
         elif mesg.find(DevData.device_uname + "@") != -1:
