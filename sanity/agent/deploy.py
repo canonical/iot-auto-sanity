@@ -180,9 +180,6 @@ def deploy(
     match method:
         case "genio_flash":
             # Assuming the host is >= 22.04
-            syscmd(
-                "set -x; sudo apt-get install -y python3-pip python3-pip-whl"
-            )
             gitlab_url = (
                 "git+https://gitlab.com/mediatek/aiot/bsp/"
                 + "genio-tools.git#egg=genio-tools"
