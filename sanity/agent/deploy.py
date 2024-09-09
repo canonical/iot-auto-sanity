@@ -369,6 +369,7 @@ def login(con):
 
         elif mesg.find(DevData.device_uname + "@") != -1:
             con.write_con(
+                "snap refresh --time | grep hold || "
                 'sudo snap set system refresh.hold="$(date --date=tomorrow'
                 ' +%Y-%m-%dT%H:%M:%S%:z)"'
             )
