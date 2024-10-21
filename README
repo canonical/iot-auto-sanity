@@ -15,19 +15,40 @@ Program your own tplan yaml
                 baud_rate: baud rate, support[115200, 9600, 921600]
             network: target device interface
             extra-recepients: ["yourmail@mail.com"]
-        
+            hostname: your host name (option)
+
         run_stage:
+            #You can use the keys below to program your own provision procedure, and no one is necessary.
+
             - sys_commands:
-                - first command to control PC
-                - second command to control PC
+                - (command to control device)
+
+            - eof_commands: (console_commands in testflinger)
+                - cmd: (command to target device through console)
+                - expected: (the phrase we expected to contain in result) (option)
+
+            - console_commands_nb: (only support in testflinger)
+                - cmd: (command to target device through console with non-block)
+
+            - login (trying login)
+
+            - run_login (monitor system boot up in run mode and login, only support ubuntu core)
+
+            - initial_login: (monitor system install and boot up and login, only support ubuntu core)
+                method: create account method, we currently support [cloud-init, system-user]
+                timeout: [number in seconds] (option)
+            - reboot_install: (reboot into recovery and monitor install, boot up and login)
+                method: create account method, we currently support [cloud-init, system-user]
+                timeout: [number in seconds] (option)
     
             - deploy:
                 utility: deploy method, we currently support [utp_com, uuu, seed_override, seed_override_lk]
                 method: create account method, we currently support [cloud-init, system-user]
-            - eof_commands:
-                - first command to target device
-                - second command to target device
-    
+                timeout: [number in seconds] (option)
+
+                (if seed_override or seed_override_lk)    
+                update_boot_assets: boolen (option)
+
             - checkbox:
                 snap_name: checkbox name
                 launcher: launcher file name 
