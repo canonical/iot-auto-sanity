@@ -30,6 +30,12 @@ def start_agent(cfg):
     DevData.netif = cfg_data.get("network")
     if cfg_data.get("hostname"):
         DevData.hostname = cfg_data.get("hostname")
+    if cfg_data.get("ssh"):
+        DevData.ssh.sship = cfg_data["ssh"]["ip"]
+        DevData.ssh.sshport = cfg_data["ssh"]["port"]
+    if cfg_data.get("pdu"):
+        DevData.pdu.pduip = cfg_data["pdu"]["ip"]
+        DevData.pdu.pduport = cfg_data["pdu"]["port"]
 
     # Controller
     con = None
@@ -50,7 +56,10 @@ def start_agent(cfg):
         Mail.recipients.extend(cfg_data.get("recipients"))
 
     try:
-        agent.start(launcher_data.get("run_stage"), con, sched)
+        if cfg_data.get("ssh"):
+            agent.ssh(launcher_data.get("run_stage"), DevData)
+        else:
+            agent.start(launcher_data.get("run_stage"), con, sched)
     except serial.SerialException as e:
         print(
             "device disconnected or multiple access on port?"

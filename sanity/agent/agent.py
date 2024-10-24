@@ -1,5 +1,6 @@
 """handle action seuence in tplan"""
 
+import subprocess
 import time
 from datetime import datetime
 from sanity.agent.mail import Mail
@@ -8,6 +9,7 @@ from sanity.agent.style import gen_head_string
 from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED
+from sanity.agent.iso import AutoISO
 
 
 def notify(status):
@@ -124,3 +126,35 @@ def start(plan, con, sched):
                 time.sleep(30)
         else:
             break
+
+
+def ssh(stage, data):
+    """the ssh follow with tplan run_stage"""
+    conn = None
+    for run in stage:
+        if isinstance(run, dict):
+            if "sys_commands" in run.keys():
+                for cmd in run["sys_commands"]:
+                    print(f"+Host executing [{cmd}]...")
+                    print(
+                        subprocess.run(
+                            cmd.split(" "),
+                            stdout=subprocess.PIPE,
+                            check=False,
+                        ).stdout.decode("utf-8")
+                    )
+            elif "deploy" in run.keys():
+                if "iso" in run["deploy"].get("utility"):
+                    image = AutoISO(data.project)
+                    conn = image.landed(data)
+            elif "eof_commands" in run.keys():
+                for cmd in run["eof_commands"]:
+                    target = cmd.get("cmd")
+                    if conn:
+                        print(
+                            f"+Target executing [{target}] "
+                            "with sudo permission..."
+                        )
+                        print(
+                            conn.send(f"echo {data.passwd} | sudo -S {target}")
+                        )
