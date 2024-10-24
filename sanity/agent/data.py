@@ -1,14 +1,14 @@
 """provide data that cross entire package"""
 
-import dataclasses
+from dataclasses import dataclass
 
 
-@dataclasses.dataclass
+@dataclass
 class DevData:
     """The data would be used cross package"""
 
-    project = None
-    IF = "eth0"
-    device_uname = None
-    device_pwd = None
-    hostname = "ubuntu"
+    project: str = "ubuntu"
+    hostname: str = "ubuntu"
+    uname: str = "ubuntu"
+    passwd: str = "ubuntu"
+    netif: str = "eth0"

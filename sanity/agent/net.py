@@ -15,7 +15,7 @@ def get_ip(con):
         retry += 1
         try:
             addr = con.write_con(
-                f'ip address show {DevData.IF} | grep "inet " | '
+                f'ip address show {DevData.netif} | grep "inet " | '
                 "head -n 1 | cut -d ' ' -f 6 | cut -d  \"/\" -f 1"
             )
             addr = addr.splitlines()[-1]

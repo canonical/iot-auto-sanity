@@ -87,18 +87,18 @@ def boot_assets_update(addr):
                             )
                             print(f"image = {image} offset = {offset}")
                             status, _ = syscmd(
-                                f"sshpass -p {DevData.device_pwd} "
+                                f"sshpass -p {DevData.passwd} "
                                 f"scp -r {ssh_option} temp/{to_image} "
-                                f"{DevData.device_uname}@{addr}:~/",
+                                f"{DevData.uname}@{addr}:~/",
                                 timeout=600,
                             )
                             if status != 0:
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
-                                f"sshpass -p {DevData.device_pwd} "
+                                f"sshpass -p {DevData.passwd} "
                                 f"ssh {ssh_option} "
-                                f"{DevData.device_uname}@{addr} "
+                                f"{DevData.uname}@{addr} "
                                 f'"set -x; sudo dd '
                                 f"if={image} "
                                 f'of=/dev/disk/by-partlabel/{part["name"]} '
@@ -111,18 +111,18 @@ def boot_assets_update(addr):
                             if "$kernel" in source or "boot.sel" in source:
                                 continue
                             status, _ = syscmd(
-                                f"sshpass -p {DevData.device_pwd} "
+                                f"sshpass -p {DevData.passwd} "
                                 f"scp -r {ssh_option} temp/{source} "
-                                f"{DevData.device_uname}@{addr}:~/",
+                                f"{DevData.uname}@{addr}:~/",
                                 timeout=600,
                             )
                             if status != 0:
                                 print("Upload boot assets failed")
                                 return
                             syscmd(
-                                f"sshpass -p {DevData.device_pwd} "
+                                f"sshpass -p {DevData.passwd} "
                                 f"ssh {ssh_option} "
-                                f"{DevData.device_uname}@{addr} "
+                                f"{DevData.uname}@{addr} "
                                 f'"set -x; sudo cp '
                                 rf"-avr {source} \$(lsblk | grep \$(ls -l "
                                 f'/dev/disk/by-partlabel/{part["name"]} '
@@ -142,18 +142,18 @@ def boot_assets_update(addr):
                         offset = part["offset"]
                         print(f"image = {image} offset = {offset}")
                         status, _ = syscmd(
-                            f"sshpass -p {DevData.device_pwd} "
+                            f"sshpass -p {DevData.passwd} "
                             f"scp -r {ssh_option} "
                             f"temp/{to_image} "
-                            f"{DevData.device_uname}@{addr}:~/",
+                            f"{DevData.uname}@{addr}:~/",
                             timeout=600,
                         )
                         if status != 0:
                             print("Upload boot assets failed")
                             return
                         syscmd(
-                            f"sshpass -p {DevData.device_pwd} "
-                            f"ssh {ssh_option} {DevData.device_uname}@{addr} "
+                            f"sshpass -p {DevData.passwd} "
+                            f"ssh {ssh_option} {DevData.uname}@{addr} "
                             f'"set -x; sudo dd '
                             rf"if={image} of=/dev/\$(ls -l "
                             f"/dev/disk/by-partlabel/{name} | rev | "
@@ -326,9 +326,9 @@ def deploy(
                 files += " boot.img snaprecoverysel.bin"
 
             status, _ = syscmd(
-                f"sshpass -p {DevData.device_pwd} "
+                f"sshpass -p {DevData.passwd} "
                 f"{scp_cmd} {files} "
-                f"{DevData.device_uname}@{addr}:~/",
+                f"{DevData.uname}@{addr}:~/",
                 timeout=600,
             )
             if status != 0:
@@ -387,16 +387,16 @@ def login(con):
     while True:
         mesg = con.read_con(False)
         if mesg.find(f"{DevData.hostname} login:") != -1:
-            con.write_con_no_wait(DevData.device_uname)
+            con.write_con_no_wait(DevData.uname)
 
         elif mesg.find("Password:") != -1:
-            con.write_con_no_wait(DevData.device_pwd)
+            con.write_con_no_wait(DevData.passwd)
 
         elif (
             mesg.find("(current) UNIX password:") != -1
             or mesg.find("Current password:") != -1
         ):
-            con.write_con_no_wait(DevData.device_pwd)
+            con.write_con_no_wait(DevData.passwd)
             chpass = True
 
         elif (
@@ -411,7 +411,7 @@ def login(con):
         ):
             con.write_con_no_wait(tpass)
 
-        elif mesg.find(DevData.device_uname + "@") != -1:
+        elif mesg.find(DevData.uname + "@") != -1:
             con.write_con(
                 "snap refresh --time | grep hold || "
                 'sudo snap set system refresh.hold="$(date --date=tomorrow'
@@ -419,7 +419,7 @@ def login(con):
             )
             if chpass is True:
                 con.write_con(
-                    f"sudo echo {DevData.device_uname}:{DevData.device_pwd} "
+                    f"sudo echo {DevData.uname}:{DevData.passwd} "
                     f"| sudo chpasswd"
                 )
             return

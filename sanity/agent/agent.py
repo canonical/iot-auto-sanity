@@ -30,7 +30,7 @@ def notify(status):
 
 
 # pylint: disable=R0912,R0915,R1702
-def start(plan, con, sched=None):
+def start(plan, con, sched):
     """the really entry for iot sanity tool
     execute action follow the tplan json"""
     while True:
