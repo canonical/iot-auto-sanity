@@ -8,8 +8,8 @@ dependencies = [
     "pyserial",
     "schedule",
     "wrapt_timeout_decorator",
-    "whl",
     "paramiko",
+    "genio-tools",
 ]
 
 dynamic = ["version"]

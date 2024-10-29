@@ -180,13 +180,6 @@ def deploy(
     files = "seed"
     match method:
         case "genio_flash":
-            # Assuming the host is >= 22.04
-            gitlab_url = (
-                "git+https://gitlab.com/mediatek/aiot/bsp/"
-                + "genio-tools.git#egg=genio-tools"
-            )
-            syscmd(f"set -x; pip3 install -U -e {gitlab_url}")
-            syscmd("set -x; export PATH=$PATH:/home/$USER/.local/bin/")
             syscmd("set -x; genio-config")
             image_tarball = [
                 f
@@ -211,10 +204,13 @@ def deploy(
                 "set -x; tar --strip-components=1 -xf "
                 f"{boot_assets_tarball} -C {image_dir}"
             )
-            syscmd(
-                f"set -x; cd {image_dir};"
-                f"genio-flash '{extra_provision_tool_args}'"
-            )
+            if extra_provision_tool_args is not None:
+                syscmd(
+                    f"set -x; cd {image_dir};"
+                    f"genio-flash {extra_provision_tool_args}"
+                )
+            else:
+                syscmd(f"set -x; cd {image_dir}; genio-flash")
 
         case "utp_com":
             # This method is currently used for i.MX6 devices that does not
