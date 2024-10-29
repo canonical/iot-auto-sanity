@@ -2,39 +2,114 @@ Install the auto-sanity tool
     1. pip3 install -U pip
     2. pip3 install .
 
-Program your own tplan yaml
-    example:
-    
-    ##############################
+tplan yaml syntax:
         config:
-            project_name: x8high-pdkv2
-            username: target device user account
-            password: target device user password
+            project_name: <string>  #your project name
+            username: <string> #target device user name
+            password: <string> #target device password
+            # serial console port setup
+            # port: the device path of the serial port, such as /dev/ttyUSB0
+            # baud_rate: baud rate of the serial port [115200, 9600, 921600]
             serial_console:
-                port: /dev/ttyUSBxxx
-                baud_rate: baud rate, support[115200, 9600, 921600]
-            network: target device interface
-            extra-recepients: ["yourmail@mail.com"]
-        
+                port: <string> 
+                baud_rate: <int> 
+            network: <string> #network interface name such as eth0
+            extra-recepients: <list of string>  #a list of mail address
+            hostname: <string> #the host name show in your console *optional*
+
         run_stage:
-            - sys_commands:
-                - first command to control PC
-                - second command to control PC
+            #You can use the keys below to program your own provision procedure, and no one is necessary.
+
+            - sys_commands: <list of string> #send command to host system
+                - <string 1>
+		- <string 2>
+
+            - eof_commands: <list of dict>  #send command to console, the keyword is "console_commands" in testflinger
+                - cmd: <string>
+                  expected: <string> #your expectped string in result *optional*
+                - cmd: <string>
+
+            - console_commands_nb: <list> #send command to console with non-blocking mode, only support in testflinger
+                - cmd: <string>
+
+            - login #assume the system is already waiting for login, it would busy try login. It also support change password if your system require change password
+
+            - run_login #monitor system boot up in run mode (make sure boot log has "snapd_recovery_mode=run" before keep going) and login, only support ubuntu core
+
+            - initial_login: #monitor system install (make sure boot log has "snapd_recovery_mode=instal") and boot up(make sure boot log has "snapd_recovery_mode=run") and login, only support ubuntu core
+                # method: choose from [cloud-init, system-user]
+                # timeout: how long the tool would waiting before timeout in second *optional*
+                method: <string>
+                timeout: <int>
+
+            - reboot_install: #reboot into recovery and monitor install, boot up and login
+                # method: choose from [cloud-init, system-user]
+                # timeout: how long the tool would waiting before timeout in second *optional*
+
+                method: <string>
+                timeout: <int>
     
             - deploy:
-                utility: deploy method, we currently support [utp_com, uuu, seed_override, seed_override_lk]
-                method: create account method, we currently support [cloud-init, system-user]
-            - eof_commands:
-                - first command to target device
-                - second command to target device
-    
+                # utility: choose from [utp_com, uuu, seed_override, seed_override_lk]
+                # method: choose from [cloud-init, system-user]
+                # timeout: how long the tool would waiting before timeout in second *optional*
+                # (if seed_override or seed_override_lk)
+                # update your boot assets *optional*
+                utility: <string>
+                method: <string>
+                timeout: <int> 
+                update_boot_assets: <boolen>
+
             - checkbox:
-                snap_name: checkbox name
-                launcher: launcher file name 
-                secure_id: device secure id on C3
-                submission_description: "describe your test purpose"
+                #snap_name: checkbox name
+                #launcher: a plan to do checkbox test
+                #secure_id: the secure id for your target dvice, you can find it on C3
+                #submission_description: a string of description
+
+                snap_name: <string> 
+                launcher: <string> 
+                secure_id: <string> 
+                submission_description: <string> 
     
-    ###############################
+
+tplan yaml example:
+
+    config:
+        project_name: x8high-pdkv2
+        username: ubuntu
+        password: ubuntu123
+        serial_console:
+            port: /dev/ttyUSB1
+            baud_rate: 115200
+        network: eth1
+        recipients: ["xxx@canonical.com", "ooo.canonical.com"]
     
+    run_stage:
+        - sys_commands:
+            - usbrelay 1_1=1
+            - usbrelay 1_2=0
+            - sleep 10
+        - deploy:
+            utility: uuu
+            method: system-user
+        - sys_commands:
+            - usbrelay 1_1=0
+            - usbrelay 1_2=1
+            - sleep 10
+
+        - initial_login:
+            method: system-user
+            timeout: 900
+        - eof_commands:
+            - cmd: sudo snap install checkbox20 --beta
+            - cmd: sudo snap install --devmode checkbox-shiner --edge
+            - cmd: sudo snap install --devmode checkbox-ce-oem --channel=focal/edge
+            - cmd: sudo snap stop --disable checkbox-ce-oem.remote-slave
+        - checkbox:
+            snap_name: checkbox-shiner
+            launcher: runner-launcher
+            secure_id: xxxxxxxxxxxxxxxx
+            submission_description: "This is an example"
+        
 Run test
     auto-sanity --sanity-launcher <your tplan>

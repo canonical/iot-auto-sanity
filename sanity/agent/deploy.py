@@ -166,7 +166,7 @@ def boot_assets_update(addr):
     syscmd(cmd)
 
 
-# pylint: disable=R0911,R0912,R0913,R0914,R0915
+# pylint: disable=R0911,R0912,R0913,R0914,R0915,R0917
 def deploy(
     con,
     method,
