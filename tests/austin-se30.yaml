@@ -1,0 +1,27 @@
+config:
+    project_name: austin-se30
+    username: ubuntu
+    password: ubuntu
+    ssh:
+        ip: 10.102.183.92
+        port: 22
+    pdu:
+        ip: 10.102.183.102
+        port: 7
+    network: enp48s0
+
+run_stage:
+    - sys_commands:
+        - rm -rf ../installer-logs.tar.xz ../a-s-tmp
+        - rm -rf report.tar.xz
+    - deploy:
+        utility: iso
+        method: cloud-init
+    - eof_commands:
+        - cmd: snap install checkbox22
+        - cmd: snap install checkbox-iiotg-classic --channel=22.04/edge --classic
+    - checkbox:
+        snap_name: checkbox
+        launcher: test-runner-se30-dp
+        secure_id: 3FFoqjdoNeKisCN7b5hhkk
+        submission_description: "daily sanity test"
