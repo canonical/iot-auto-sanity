@@ -106,7 +106,6 @@ class AutoISO:
         instlog = "installer-logs.tar.xz"
         savedlog = f"{homedir}/{instlog}"
         inst.download(f"/{instlog}", savedlog)
-        inst.close()
         print(f"The {savedlog} is saved")
 
         # Extract and check the log
@@ -117,6 +116,17 @@ class AutoISO:
             check=False,
         )
         self.chklog(extractdir)
+
+        # Hack cloud-init user-data to change default
+        # account/password with ubuntu/ubuntu
+        userdata = "user-data.sh"
+        insthomedir = "/home/ubuntu-server/"
+        inst.upload(f"x86-tools/{userdata}", f"{insthomedir}{userdata}")
+        inst.send(f"chmod +x {insthomedir}{userdata}")
+        print(
+            inst.send(f"echo {data.passwd} | sudo -S {insthomedir}{userdata}")
+        )
+        inst.close()
 
         # Power-off the target
         # Switch USB stick to off
