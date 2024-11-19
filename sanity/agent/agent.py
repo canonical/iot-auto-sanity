@@ -4,7 +4,7 @@ import subprocess
 import time
 from datetime import datetime
 from sanity.agent.mail import Mail
-from sanity.agent.checkbox import run_checkbox
+from sanity.agent.checkbox import checkbox, run_checkbox
 from sanity.agent.style import gen_head_string
 from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
@@ -158,3 +158,15 @@ def ssh(stage, data):
                         print(
                             conn.send(f"echo {data.passwd} | sudo -S {target}")
                         )
+            elif "checkbox" in run.keys():
+                print(
+                    checkbox(
+                        data,
+                        run["checkbox"].get("snap_name"),
+                        run["checkbox"].get("launcher"),
+                        run["checkbox"].get("secure_id"),
+                        run["checkbox"].get(
+                            "submission_description", "auto sanity test"
+                        ),
+                    ),
+                )
