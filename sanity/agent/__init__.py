@@ -11,6 +11,15 @@ from sanity.agent.err import FAILED
 from sanity.launcher.parser import LauncherParser
 
 
+def mail_fail(project, msg):
+    """send failed message through the mail"""
+    print(f"FAILED\n{msg}")
+    Mail.send_mail(
+        FAILED,
+        f"{project}\n{msg}",
+    )
+
+
 def start_agent(cfg):
     """sanity main agent"""
 
@@ -55,18 +64,25 @@ def start_agent(cfg):
     if cfg_data.get("recipients"):
         Mail.recipients.extend(cfg_data.get("recipients"))
 
-    try:
-        if cfg_data.get("ssh"):
+    if cfg_data.get("ssh"):
+        try:
             agent.ssh(launcher_data.get("run_stage"), DevData)
+        except (
+            FileNotFoundError,
+            TimeoutError,
+            ValueError,
+            IOError,
+            EnvironmentError,
+        ) as e:
+            mail_fail(DevData.project, e)
         else:
+            print(f"The {DevData.project} auto-sanity testing is finished!!!")
+    else:
+        try:
             agent.start(launcher_data.get("run_stage"), con, sched)
-    except serial.SerialException as e:
-        print(
-            "device disconnected or multiple access on port?"
-            f" error code {e}"
-        )
-        Mail.send_mail(
-            FAILED,
-            f"{DevData.project} device disconnected "
-            "or multiple access on port?",
-        )
+        except serial.SerialException as e:
+            msg = (
+                "device disconnected or multiple access on port?"
+                f" error code {e}"
+            )
+            mail_fail(DevData.project, msg)
