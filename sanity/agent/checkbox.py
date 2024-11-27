@@ -7,13 +7,18 @@ from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.net import get_ip, check_net_connection
 from sanity.agent.data import DevData
+from sanity.agent.ssh import SSHConnection
 
 
 # pylint: disable=R1705,R0801
 def run_checkbox(con, runner_cfg, secure_id, desc):
     """run checkbox and submit report to C3"""
 
-    addr = get_ip(con)
+    if isinstance(con, SSHConnection):
+        addr = con.getname()
+    else:
+        addr = get_ip(con)
+
     if addr == FAILED:
         return {
             "code": FAILED,

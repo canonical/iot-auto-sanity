@@ -11,6 +11,7 @@ from sanity.agent.cmd import syscmd
 from sanity.agent.style import columns
 from sanity.agent.err import FAILED, SUCCESS
 from sanity.agent.data import DevData
+from sanity.agent.iso import DeploymentISO
 
 
 INSTALL_MODE = "install"
@@ -369,7 +370,8 @@ def deploy(
 
             if method == "seed_override_nocheck":
                 return {"code": SUCCESS}
-
+        case "iso":
+            return DeploymentISO().result(con)
         case _:
             return {"code": FAILED}
 

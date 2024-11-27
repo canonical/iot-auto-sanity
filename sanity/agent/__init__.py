@@ -8,6 +8,7 @@ from sanity.agent.console import Console
 from sanity.agent.scheduler import Scheduler
 from sanity.agent.data import DevData
 from sanity.agent.err import FAILED
+from sanity.agent.ssh import SSHConnection
 from sanity.launcher.parser import LauncherParser
 
 
@@ -25,12 +26,21 @@ def start_agent(cfg):
     DevData.project = cfg_data.get("project_name")
     DevData.device_uname = cfg_data.get("username")
     DevData.device_pwd = cfg_data.get("password")
-    con = Console(
-        DevData.device_uname,
-        cfg_data["serial_console"]["port"],
-        cfg_data["serial_console"]["baud_rate"],
-    )
     DevData.IF = cfg_data["network"]
+
+    if cfg_data.get("ssh"):
+        con = SSHConnection(
+            cfg_data["ssh"]["ip"],
+            cfg_data["ssh"]["port"],
+            cfg_data.get("username"),
+            cfg_data.get("password"),
+        )
+    else:
+        con = Console(
+            DevData.device_uname,
+            cfg_data["serial_console"]["port"],
+            cfg_data["serial_console"]["baud_rate"],
+        )
 
     if cfg_data.get("recipients"):
         Mail.recipients.extend(cfg_data.get("recipients"))
@@ -54,4 +64,10 @@ def start_agent(cfg):
             FAILED,
             f"{DevData.project} device disconnected "
             "or multiple access on port?",
+        )
+    except TimeoutError as e:
+        print(f"Timeout with the device SSH connection error code {e}")
+        Mail.send_mail(
+            FAILED,
+            f"{DevData.project} timeout with the device SSH connection",
         )
