@@ -9,6 +9,7 @@ dependencies = [
     "schedule",
     "wrapt_timeout_decorator",
     "whl",
+    "paramiko",
 ]
 
 dynamic = ["version"]

@@ -8,6 +8,7 @@ from sanity.agent.style import gen_head_string
 from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED
+from sanity.agent.iso import AutoISO
 
 
 def notify(status):
@@ -71,14 +72,17 @@ def start(plan, con, sched=None):
 
                 elif "deploy" in stage.keys():
                     print(gen_head_string("deploy procedure"))
-                    status = deploy(
-                        con,
-                        stage["deploy"].get("utility"),
-                        stage["deploy"].get("method"),
-                        stage["deploy"].get("extra_provision_tool_args"),
-                        stage["deploy"].get("update_boot_assets", False),
-                        stage["deploy"].get("timeout", 600),
-                    )
+                    if "iso" in stage["deploy"].get("utility"):
+                        status = AutoISO().result(con.getname())
+                    else:
+                        status = deploy(
+                            con,
+                            stage["deploy"].get("utility"),
+                            stage["deploy"].get("method"),
+                            stage["deploy"].get("extra_provision_tool_args"),
+                            stage["deploy"].get("update_boot_assets", False),
+                            stage["deploy"].get("timeout", 600),
+                        )
 
                     if status["code"] == FAILED:
                         notify(status)
@@ -112,6 +116,13 @@ def start(plan, con, sched=None):
                     print(all_cmd)
                     syscmd(all_cmd)
                     print(gen_head_string("sys comand end"))
+                elif "ssh_commands" in stage.keys():
+                    if not con.isconnected():
+                        con.connection()
+                    for cmd in stage["ssh_commands"]:
+                        target = cmd.get("cmd")
+                        print(f"Target executing [{target}]")
+                        print(con.send(target))
         if sched:
             sched.work_flag = False
             while sched.work_flag is False:
