@@ -462,7 +462,24 @@ def __boot_login(con, userinit, is_init_mode):
                     state = LOGIN
 
             case "console-conf":
-                print("console-conf TBD")
+                is_init_mode = False
+                if re.search("Press enter to configure.", mesg) or re.search(
+                    "Configure the network and setup an administrator account",
+                    mesg,
+                ):
+                    con.write_con_no_wait()
+
+                if re.search("Network connections", mesg):
+                    con.write_con_no_wait()
+
+                if re.search("Profile setup", mesg):
+                    con.write_con_no_wait(DevData.device_uname)
+                    con.write_con_no_wait()
+
+                if re.search("Remote access was enabled", mesg):
+                    con.write_con_no_wait()
+                    break
+
             case "system-user":
                 if re.search("Ubuntu Core 2[024] on", mesg):
                     state = LOGIN
