@@ -179,13 +179,6 @@ def deploy(
     files = "seed"
     match method:
         case "genio_flash":
-            # Assuming the host is >= 22.04
-            gitlab_url = (
-                "git+https://gitlab.com/mediatek/aiot/bsp/"
-                + "genio-tools.git#egg=genio-tools"
-            )
-            syscmd(f"set -x; pip3 install -U -e {gitlab_url}")
-            syscmd("set -x; export PATH=$PATH:/home/$USER/.local/bin/")
             syscmd("set -x; genio-config")
             image_tarball = [
                 f
@@ -212,7 +205,7 @@ def deploy(
             )
             syscmd(
                 f"set -x; cd {image_dir};"
-                f"genio-flash '{extra_provision_tool_args}'"
+                f"genio-flash {extra_provision_tool_args}"
             )
 
         case "utp_com":
