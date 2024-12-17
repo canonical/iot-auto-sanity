@@ -27,6 +27,14 @@ LAUNCHER_SCHEMA = {
                     },
                     "required": ["port", "baud_rate"],
                 },
+                "ssh": {
+                    "type": "object",
+                    "properties": {
+                        "ip": {"type": "string"},
+                        "port": {"type": "integer"},
+                    },
+                    "required": ["ip", "port"],
+                },
                 "network": {"type": "string"},
                 "recipients": {
                     "type": "array",
@@ -38,7 +46,6 @@ LAUNCHER_SCHEMA = {
                 "project_name",
                 "username",
                 "password",
-                "serial_console",
                 "network",
             ],
         },
@@ -67,6 +74,7 @@ LAUNCHER_SCHEMA = {
                                             "seed_override",
                                             "seed_override_lk",
                                             "seed_override_nocheck",
+                                            "iso",
                                         ],
                                     },
                                     "method": {"$ref": "#/$defs/method"},

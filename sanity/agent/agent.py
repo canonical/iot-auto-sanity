@@ -112,6 +112,13 @@ def start(plan, con, sched=None):
                     print(all_cmd)
                     syscmd(all_cmd)
                     print(gen_head_string("sys comand end"))
+                elif "ssh_commands" in stage.keys():
+                    if not con.isconnected():
+                        con.connection()
+                    for cmd in stage["ssh_commands"]:
+                        target = cmd.get("cmd")
+                        print(f"Target executing [{target}]")
+                        print(con.send(target))
         if sched:
             sched.work_flag = False
             while sched.work_flag is False:
