@@ -1,7 +1,6 @@
 """This module provides consolve relvent methods"""
 
 import time
-import os
 import serial
 from sanity.agent.cmd import syscmd
 
@@ -56,10 +55,6 @@ class Console:
         This function is for handling serial console connection
         """
         attempt = 0
-        try:
-            os.stat(com_port)
-        except OSError as e:
-            raise SystemExit(f"{com_port} not exist") from e
 
         while True:
             try:
