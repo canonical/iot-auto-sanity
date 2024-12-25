@@ -21,7 +21,7 @@ def broken_handler(func):
                 if attempt >= 3:
                     raise SystemExit("serial connection is unstable") from e
 
-                self.connect(self.com_port, self.baud_rate)
+                self.connect()
 
     return wrapper
 
@@ -44,13 +44,13 @@ class Console:
         self.com_port = com_port
         self.baud_rate = brate
 
-        self.connect(self.com_port, self.baud_rate)
+        self.connect()
 
     def close(self):
         """close port"""
         self.con.close()
 
-    def connect(self, com_port, brate):
+    def connect(self):
         """
         This function is for handling serial console connection
         """
@@ -59,10 +59,10 @@ class Console:
         while True:
             try:
                 attempt += 1
-                syscmd("sudo chmod 666 " + com_port)
+                syscmd("sudo chmod 666 " + self.com_port)
                 self.con = serial.Serial(
-                    port=com_port,
-                    baudrate=brate,
+                    port=self.com_port,
+                    baudrate=self.baud_rate,
                     stopbits=serial.STOPBITS_ONE,
                     interCharTimeout=None,
                     timeout=5,
@@ -70,10 +70,12 @@ class Console:
                 return
             except serial.SerialException as e:
                 if attempt >= 5:
-                    raise SystemExit(f"connect to {com_port} failed") from e
+                    raise SystemExit(
+                        f"connect to {self.com_port} failed"
+                    ) from e
 
                 print(f"{e} retrying.....")
-                syscmd("fuser -k " + com_port)
+                syscmd("fuser -k " + self.com_port)
                 time.sleep(5)
 
     # due to command will not return "xxx@ubuntu"
