@@ -1,9 +1,29 @@
 """This module provides consolve relvent methods"""
 
 import time
-import os
 import serial
 from sanity.agent.cmd import syscmd
+
+
+def broken_handler(func):
+    """
+    for handle console connection broken
+    issue
+    """
+
+    def wrapper(self, *arg, **kwargs):
+        attempt = 0
+        while True:
+            try:
+                attempt += 1
+                return func(self, *arg, **kwargs)
+            except serial.SerialException as e:
+                if attempt >= 3:
+                    raise SystemExit("serial connection is unstable") from e
+
+                self.connect()
+
+    return wrapper
 
 
 class Console:
@@ -11,6 +31,8 @@ class Console:
 
     con = None
     device_uname = ""
+    com_port = ""
+    baud_rate = 115200
 
     # record log
     record_log = False
@@ -19,34 +41,46 @@ class Console:
     def __init__(self, uname, com_port="/dev/ttyUSB0", brate=115200):
         self.record_log = False
         self.device_uname = uname
+        self.com_port = com_port
+        self.baud_rate = brate
 
-        try:
-            os.stat(com_port)
-        except OSError as e:
-            raise SystemExit(f"{com_port} not exist") from e
-
-        while True:
-            try:
-                syscmd("sudo chmod 666 " + com_port)
-                self.con = serial.Serial(
-                    port=com_port,
-                    baudrate=brate,
-                    stopbits=serial.STOPBITS_ONE,
-                    interCharTimeout=None,
-                    timeout=5,
-                )
-                break
-            except serial.SerialException as e:
-                print(f"{e} retrying.....")
-                syscmd("fuser -k " + com_port)
-                time.sleep(1)
+        self.connect()
 
     def close(self):
         """close port"""
         self.con.close()
 
+    def connect(self):
+        """
+        This function is for handling serial console connection
+        """
+        attempt = 0
+
+        while True:
+            try:
+                attempt += 1
+                syscmd("sudo chmod 666 " + self.com_port)
+                self.con = serial.Serial(
+                    port=self.com_port,
+                    baudrate=self.baud_rate,
+                    stopbits=serial.STOPBITS_ONE,
+                    interCharTimeout=None,
+                    timeout=5,
+                )
+                return
+            except serial.SerialException as e:
+                if attempt >= 5:
+                    raise SystemExit(
+                        f"connect to {self.com_port} failed"
+                    ) from e
+
+                print(f"{e} retrying.....")
+                syscmd("fuser -k " + self.com_port)
+                time.sleep(5)
+
     # due to command will not return "xxx@ubuntu"
     # we need to using different function to handle
+    @broken_handler
     def write_con_no_wait(self, message=""):
         """send command to console and do not wait for certain word pattern"""
         self.con.flushOutput()
@@ -64,6 +98,7 @@ class Console:
                 return res
             res = res + "\n" + mesg
 
+    @broken_handler
     def write_con(self, message=""):
         """send command to console and wait for certain word pattern"""
         self.con.flushOutput()
@@ -83,6 +118,7 @@ class Console:
 
         self.record_log = enable
 
+    @broken_handler
     def read_con(self, handle_empty=True):
         """read from console"""
         while True:
