@@ -22,7 +22,7 @@ def broken_handler(func):
                 if attempt >= 3:
                     raise SystemExit("serial connection is unstable") from e
 
-                self.connect(self.com_port, self.brate)
+                self.connect(self.com_port, self.baud_rate)
 
     return wrapper
 
@@ -33,7 +33,7 @@ class Console:
     con = None
     device_uname = ""
     com_port = ""
-    brate = 115200
+    baud_rate = 115200
 
     # record log
     record_log = False
@@ -43,9 +43,9 @@ class Console:
         self.record_log = False
         self.device_uname = uname
         self.com_port = com_port
-        self.brate = brate
+        self.baud_rate = brate
 
-        self.connect(self.com_port, self.brate)
+        self.connect(self.com_port, self.baud_rate)
 
     def close(self):
         """close port"""
