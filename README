@@ -7,12 +7,19 @@ tplan yaml syntax:
             project_name: <string>  #your project name
             username: <string> #target device user name
             password: <string> #target device password
+            # connection setup (Either serial console or ssh)
             # serial console port setup
             # port: the device path of the serial port, such as /dev/ttyUSB0
             # baud_rate: baud rate of the serial port [115200, 9600, 921600]
             serial_console:
                 port: <string> 
                 baud_rate: <int> 
+            # ssh connection setup
+            # ip: the connection ip address
+            # port: the connection port
+            ssh:
+                ip: <string>
+                port: <int>
             network: <string> #network interface name such as eth0
             extra-recepients: <list of string>  #a list of mail address
             hostname: <string> #the host name show in your console *optional*
@@ -24,7 +31,8 @@ tplan yaml syntax:
                 - <string 1>
 		- <string 2>
 
-            - eof_commands: <list of dict>  #send command to console, the keyword is "console_commands" in testflinger
+            - eof_commands: <list of dict>  #send command to target system
+                # for console, the keyword is "console_commands" in testflinger
                 - cmd: <string>
                   expected: <string> #your expectped string in result *optional*
                 - cmd: <string>
@@ -50,7 +58,7 @@ tplan yaml syntax:
                 timeout: <int>
     
             - deploy:
-                # utility: choose from [utp_com, uuu, seed_override, seed_override_lk]
+                # utility: choose from [utp_com, uuu, seed_override, seed_override_lk, iso]
                 # method: choose from [cloud-init, system-user]
                 # timeout: how long the tool would waiting before timeout in second *optional*
                 # (if seed_override or seed_override_lk)

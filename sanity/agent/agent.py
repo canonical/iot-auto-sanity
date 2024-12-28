@@ -8,6 +8,7 @@ from sanity.agent.style import gen_head_string
 from sanity.agent.deploy import login, boot_login, deploy
 from sanity.agent.cmd import syscmd
 from sanity.agent.err import FAILED
+from sanity.agent.ssh import SSHConnection
 
 
 def notify(status):
@@ -96,6 +97,9 @@ def start(plan, con, sched=None):
                     notify(status)
                 elif "eof_commands" in stage.keys():
                     print(gen_head_string("custom command start"))
+                    if isinstance(con, SSHConnection):
+                        if not con.isconnected():
+                            con.connection()
                     for cmd in stage["eof_commands"]:
                         result = con.write_con(cmd.get("cmd"))
                         expected = cmd.get("expected", None)

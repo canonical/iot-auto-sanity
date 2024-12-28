@@ -1,0 +1,37 @@
+config:
+    project_name: austin-se30
+    username: ubuntu
+    password: ubuntu
+    ssh:
+        ip: 10.102.183.240
+        port: 22
+    network: enp48s0
+
+run_stage:
+    - sys_commands:
+        - rm -rf ../installer-logs.tar.xz ../a-s-tmp
+        - rm -rf report.tar.xz
+        - zapper typecmux set TS
+        - sleep 1
+        - lsblk | grep sda
+    - sys_commands:
+        - sudo dd if=austin-se30.iso of=/dev/sda bs=32M
+    - sys_commands:
+        - sync
+        - snmpset -c private -v1 10.102.183.102 .1.3.6.1.4.1.318.1.1.12.3.3.1.1.4.7 i 2
+        - zapper typecmux set DUT
+        - snmpset -c private -v1 10.102.183.102 .1.3.6.1.4.1.318.1.1.12.3.3.1.1.4.7 i 1
+    - deploy:
+        utility: iso
+        method: cloud-init
+    - sys_commands:
+        - snmpset -c private -v1 10.102.183.102 .1.3.6.1.4.1.318.1.1.12.3.3.1.1.4.7 i 2
+        - zapper typecmux set OFF
+        - snmpset -c private -v1 10.102.183.102 .1.3.6.1.4.1.318.1.1.12.3.3.1.1.4.7 i 1
+    - eof_commands:
+        - cmd: snap install checkbox22
+        - cmd: snap install checkbox-iiotg-classic --channel=22.04/edge --classic
+    - checkbox:
+        launcher: runner-launcher
+        secure_id: 3FFoqjdoNeKisCN7b5hhkk
+        submission_description: "daily sanity test"
