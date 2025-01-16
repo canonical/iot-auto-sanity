@@ -29,17 +29,9 @@ def broken_handler(func):
 class Console:
     """handle send and receive through console to target"""
 
-    con = None
-    device_uname = ""
-    com_port = ""
-    baud_rate = 115200
-
-    # record log
-    record_log = False
-    log = ""
-
     def __init__(self, uname, com_port="/dev/ttyUSB0", brate=115200):
         self.record_log = False
+        self.log = ""
         self.device_uname = uname
         self.com_port = com_port
         self.baud_rate = brate
