@@ -3,6 +3,7 @@
 import logging
 import time
 from dataclasses import dataclass
+from socket import error as SocketError
 import paramiko
 
 
@@ -47,7 +48,7 @@ class SSHConnection:
             self.close()
 
         self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
         waiting = time.time() + self.info.timeout
         while True:
@@ -59,9 +60,12 @@ class SSHConnection:
                     self.info.passwd,
                 )
             except (
-                paramiko.ssh_exception.NoValidConnectionsError,
+                paramiko.ssh_exception.BadHostKeyException,
                 paramiko.ssh_exception.AuthenticationException,
+                paramiko.ssh_exception.UnableToAuthenticate,
+                paramiko.ssh_exception.NoValidConnectionsError,
                 paramiko.ssh_exception.SSHException,
+                SocketError,
             ) as e:
                 print(e)
                 if time.time() > waiting:
